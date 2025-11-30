@@ -1,115 +1,177 @@
--- Drift colorscheme for Neovim
--- A soothing theme inspired by ocean waves and drifting
+-- =============================================================================
+-- DRIFT COLORSCHEME
+-- A unique, beautiful Neovim colorscheme with 6 stunning variants
+-- =============================================================================
 
 local M = {}
 
-M.styles_list = { "dark", "light" }
+-- Available style variants
+M.styles_list = { "night", "storm", "aurora", "moon", "day", "nebula" }
 
----Change drift option (vim.g.drift_config.option)
----@param opt string: option name
----@param value any: new value
-function M.set_options(opt, value)
-  local cfg = vim.g.drift_config
-  cfg[opt] = value
-  vim.g.drift_config = cfg
+-- Default configuration
+local default_config = {
+  -- The base style: "night", "storm", "aurora", "moon", "day", "nebula"
+  style = "night",
+
+  -- Show "~" at end of buffer (default: false)
+  ending_tildes = false,
+
+  -- Transparent background (default: false)
+  transparent = false,
+
+  -- Code styling options
+  code_style = {
+    comments = { italic = true },
+    keywords = { italic = true },
+    functions = {},
+    strings = {},
+    variables = {},
+    types = {},
+  },
+
+  -- Diagnostic options
+  diagnostics = {
+    -- Use undercurl for diagnostic underlines (default: true)
+    undercurl = true,
+    -- Show background for virtual text (default: true)
+    background = true,
+  },
+
+  -- Custom color overrides (merged into palette)
+  colors = {},
+
+  -- Custom highlight overrides (applied after all highlights)
+  highlights = {},
+}
+
+-- Store the currently active style
+M.current_style = nil
+
+-- Initialize options
+function M.set_options(opts)
+  opts = opts or {}
+  vim.g.drift_config = vim.tbl_deep_extend("force", default_config, opts)
 end
 
----Apply the colorscheme (same as ':colorscheme drift')
-function M.colorscheme()
-  vim.cmd("hi clear")
-  if vim.fn.exists("syntax_on") then
-    vim.cmd("syntax reset")
-  end
-  vim.o.termguicolors = true
-  vim.g.colors_name = "drift"
-  local cfg = vim.g.drift_config or {}
-  if vim.o.background == "light" then
-    M.set_options("style", "light")
-  elseif cfg.style == "light" then
-    M.set_options("style", "light")
-  end
-  require("drift.highlights").setup()
-  require("drift.terminal").setup()
-end
+-- Apply the colorscheme
+function M.colorscheme(style)
+  -- Prepare configuration
+  local cfg = vim.g.drift_config or default_config
+  style = style or cfg.style or "night"
 
----Toggle between drift styles
-function M.toggle()
-  local index = vim.g.drift_config.toggle_style_index + 1
-  if index > #vim.g.drift_config.toggle_style_list then
-    index = 1
+  -- Validate style
+  local valid_style = false
+  for _, s in ipairs(M.styles_list) do
+    if s == style then
+      valid_style = true
+      break
+    end
   end
-  M.set_options("style", vim.g.drift_config.toggle_style_list[index])
-  M.set_options("toggle_style_index", index)
-  if vim.g.drift_config.style == "light" then
+
+  if not valid_style then
+    vim.notify(
+      string.format("Drift: Invalid style '%s'. Using 'night'.", style),
+      vim.log.levels.WARN
+    )
+    style = "night"
+  end
+
+  -- Store current style
+  M.current_style = style
+
+  -- Update config with style
+  vim.g.drift_config = vim.tbl_deep_extend("force", cfg, { style = style })
+
+  -- Determine light/dark background
+  if style == "day" then
     vim.o.background = "light"
   else
     vim.o.background = "dark"
   end
-  vim.api.nvim_command("colorscheme drift")
+
+  -- Clear existing highlights
+  if vim.g.colors_name then
+    vim.cmd("hi clear")
+  end
+
+  -- Reset syntax if enabled
+  if vim.fn.exists("syntax_on") then
+    vim.cmd("syntax reset")
+  end
+
+  -- Set colorscheme name
+  vim.g.colors_name = "drift"
+
+  -- Ensure termguicolors
+  vim.o.termguicolors = true
+
+  -- Apply highlights
+  require("drift.highlights").setup()
+
+  -- Apply terminal colors
+  require("drift.terminal").setup()
 end
 
-local default_config = {
-  -- Main options --
-  style = "dark", -- choose between 'dark' and 'light'
-  toggle_style_key = nil,
-  toggle_style_list = M.styles_list,
-  transparent = false, -- don't set background
-  term_colors = true, -- enable terminal colors
-  ending_tildes = false, -- show end-of-buffer tildes
-  cmp_itemkind_reverse = false, -- reverse item kind highlights in cmp menu
+-- Toggle between styles
+function M.toggle(reverse)
+  local cfg = vim.g.drift_config or default_config
+  local toggle_list = cfg.toggle_style_list or M.styles_list
+  local current = M.current_style or cfg.style or "night"
 
-  -- Changing Formats --
-  code_style = {
-    comments = "italic",
-    keywords = "none",
-    functions = "none",
-    strings = "none",
-    variables = "none",
-  },
-
-  -- Lualine options --
-  lualine = {
-    transparent = false, -- center bar (c) transparency
-  },
-
-  -- Custom Highlights --
-  colors = {}, -- Override default colors
-  highlights = {}, -- Override highlight groups
-
-  -- Plugins Related --
-  diagnostics = {
-    darker = true, -- darker colors for diagnostic
-    undercurl = true, -- use undercurl for diagnostics
-    background = true, -- use background color for virtual text
-  },
-}
-
----Setup drift.nvim options, without applying colorscheme
----@param opts table: a table containing options
-function M.setup(opts)
-  if not vim.g.drift_config or not vim.g.drift_config.loaded then
-    vim.g.drift_config = vim.tbl_deep_extend("keep", vim.g.drift_config or {}, default_config)
-    M.set_options("loaded", true)
-    M.set_options("toggle_style_index", 0)
-  end
-  if opts then
-    vim.g.drift_config = vim.tbl_deep_extend("force", vim.g.drift_config, opts)
-    if opts.toggle_style_list then
-      M.set_options("toggle_style_list", opts.toggle_style_list)
+  -- Find current index
+  local current_idx = 1
+  for i, style in ipairs(toggle_list) do
+    if style == current then
+      current_idx = i
+      break
     end
   end
-  if vim.g.drift_config.toggle_style_key then
-    vim.api.nvim_set_keymap(
-      "n",
-      vim.g.drift_config.toggle_style_key,
-      '<cmd>lua require("drift").toggle()<cr>',
-      { noremap = true, silent = true }
-    )
+
+  -- Calculate next index
+  local next_idx
+  if reverse then
+    next_idx = current_idx - 1
+    if next_idx < 1 then
+      next_idx = #toggle_list
+    end
+  else
+    next_idx = current_idx + 1
+    if next_idx > #toggle_list then
+      next_idx = 1
+    end
   end
+
+  -- Apply next style
+  local next_style = toggle_list[next_idx]
+  M.colorscheme(next_style)
+
+  -- Notify user
+  vim.notify(
+    string.format("Drift: Switched to '%s' style", next_style),
+    vim.log.levels.INFO
+  )
 end
 
-function M.load()
-  vim.api.nvim_command("colorscheme drift")
+-- Setup function
+function M.setup(opts)
+  M.set_options(opts)
+end
+
+-- Load function (called by colorscheme file)
+function M.load(style)
+  M.colorscheme(style)
+end
+
+-- Get palette colors (for external use)
+function M.get_colors(style)
+  local colors = require("drift.colors")
+  local c = colors.get(style)
+  return colors.extend(c)
+end
+
+-- Get current style
+function M.get_style()
+  return M.current_style or (vim.g.drift_config and vim.g.drift_config.style) or "night"
 end
 
 return M

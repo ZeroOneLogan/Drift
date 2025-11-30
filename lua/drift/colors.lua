@@ -61,6 +61,9 @@ function M.extend(c)
   extended.fg_gutter = c.fg4
   extended.fg_sidebar = c.fg2
 
+  -- Alias comment color (typically fg3)
+  extended.comment = c.fg3
+
   -- Rainbow colors for brackets, indents, etc.
   extended.rainbow = {
     c.iris,
