@@ -31,7 +31,7 @@ function M.setup()
   vim.g.terminal_color_11 = c.gold      -- Bright Yellow
   vim.g.terminal_color_12 = c.lavender  -- Bright Blue
   vim.g.terminal_color_13 = c.blossom   -- Bright Magenta
-  vim.g.terminal_color_14 = c.mint      -- Bright Cyan
+  vim.g.terminal_color_14 = c.cyan      -- Bright Cyan
   vim.g.terminal_color_15 = c.fg1       -- Bright White
 
   -- Background and foreground (used by some terminal emulators)
