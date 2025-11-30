@@ -1,38 +1,63 @@
--- Drift lualine theme
+-- =============================================================================
+-- DRIFT COLORSCHEME - LUALINE THEME
+-- A beautiful statusline theme that complements the Drift colorscheme
+-- =============================================================================
+
+local drift = require("drift")
 local colors = require("drift.colors")
+local util = require("drift.util")
 
-local drift = {}
+local M = {}
 
-drift.normal = {
-  a = { fg = colors.bg0, bg = colors.green, gui = "bold" },
-  b = { fg = colors.fg, bg = colors.bg2 },
-  c = { fg = colors.fg, bg = colors.bg1 },
-}
+-- Generate lualine theme based on current style
+function M.get()
+  local c = colors.get()
+  c = colors.extend(c)
 
-drift.insert = {
-  a = { fg = colors.bg0, bg = colors.blue, gui = "bold" },
-}
+  -- Determine if using light or dark background
 
-drift.visual = {
-  a = { fg = colors.bg0, bg = colors.purple, gui = "bold" },
-}
+  -- Create accent variations for visual interest
+  local bg_status = util.darken(c.bg0, 0.2)
+  local bg_inactive = util.lighten(c.bg0, 0.03)
 
-drift.replace = {
-  a = { fg = colors.bg0, bg = colors.red, gui = "bold" },
-}
+  return {
+    normal = {
+      a = { fg = c.bg0, bg = c.azure, gui = "bold" },
+      b = { fg = c.azure, bg = c.bg2 },
+      c = { fg = c.fg2, bg = bg_status },
+    },
+    insert = {
+      a = { fg = c.bg0, bg = c.sage, gui = "bold" },
+      b = { fg = c.sage, bg = c.bg2 },
+      c = { fg = c.fg2, bg = bg_status },
+    },
+    visual = {
+      a = { fg = c.bg0, bg = c.iris, gui = "bold" },
+      b = { fg = c.iris, bg = c.bg2 },
+      c = { fg = c.fg2, bg = bg_status },
+    },
+    replace = {
+      a = { fg = c.bg0, bg = c.mauve, gui = "bold" },
+      b = { fg = c.mauve, bg = c.bg2 },
+      c = { fg = c.fg2, bg = bg_status },
+    },
+    command = {
+      a = { fg = c.bg0, bg = c.amber, gui = "bold" },
+      b = { fg = c.amber, bg = c.bg2 },
+      c = { fg = c.fg2, bg = bg_status },
+    },
+    terminal = {
+      a = { fg = c.bg0, bg = c.mint, gui = "bold" },
+      b = { fg = c.mint, bg = c.bg2 },
+      c = { fg = c.fg2, bg = bg_status },
+    },
+    inactive = {
+      a = { fg = c.fg3, bg = bg_inactive },
+      b = { fg = c.fg3, bg = bg_inactive },
+      c = { fg = c.fg3, bg = bg_inactive },
+    },
+  }
+end
 
-drift.command = {
-  a = { fg = colors.bg0, bg = colors.yellow, gui = "bold" },
-}
-
-drift.terminal = {
-  a = { fg = colors.bg0, bg = colors.cyan, gui = "bold" },
-}
-
-drift.inactive = {
-  a = { fg = colors.grey, bg = colors.bg1 },
-  b = { fg = colors.grey, bg = colors.bg1 },
-  c = { fg = colors.grey, bg = colors.bg1 },
-}
-
-return drift
+-- Return theme when required
+return M.get()

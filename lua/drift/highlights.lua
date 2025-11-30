@@ -1,776 +1,1509 @@
--- Drift colorscheme highlight definitions
+-- =============================================================================
+-- DRIFT COLORSCHEME - HIGHLIGHTS
+-- A world-class, semantic highlighting system
+-- =============================================================================
+
 local c = require("drift.colors")
 local util = require("drift.util")
 
 local M = {}
-local hl = { langs = {}, plugins = {} }
 
--- Helper to get config safely
+-- Helper to get configuration
 local function get_config()
-  return vim.g.drift_config or {
-    transparent = false,
-    ending_tildes = false,
-    cmp_itemkind_reverse = false,
-    code_style = {
-      comments = "italic",
-      keywords = "none",
-      functions = "none",
-      strings = "none",
-      variables = "none",
-    },
-    diagnostics = {
-      darker = true,
-      undercurl = true,
-      background = true,
-    },
-  }
+  return vim.g.drift_config or {}
 end
 
-local cfg = get_config()
-
-local function vim_highlights(highlights)
-  for group_name, group_settings in pairs(highlights) do
-    vim.api.nvim_command(
-      string.format(
-        "highlight %s guifg=%s guibg=%s guisp=%s gui=%s",
-        group_name,
-        group_settings.fg or "none",
-        group_settings.bg or "none",
-        group_settings.sp or "none",
-        group_settings.fmt or "none"
-      )
-    )
+-- Helper to apply highlights
+local function set_highlights(groups)
+  for group, settings in pairs(groups) do
+    if settings.link then
+      vim.api.nvim_set_hl(0, group, { link = settings.link })
+    else
+      local hl = {}
+      if settings.fg then hl.fg = settings.fg end
+      if settings.bg then hl.bg = settings.bg end
+      if settings.sp then hl.sp = settings.sp end
+      if settings.bold then hl.bold = true end
+      if settings.italic then hl.italic = true end
+      if settings.underline then hl.underline = true end
+      if settings.undercurl then hl.undercurl = true end
+      if settings.underdouble then hl.underdouble = true end
+      if settings.underdotted then hl.underdotted = true end
+      if settings.underdashed then hl.underdashed = true end
+      if settings.strikethrough then hl.strikethrough = true end
+      if settings.reverse then hl.reverse = true end
+      if settings.nocombine then hl.nocombine = true end
+      if settings.blend then hl.blend = settings.blend end
+      vim.api.nvim_set_hl(0, group, hl)
+    end
   end
 end
 
-local colors = {
-  Fg = { fg = c.fg },
-  LightGrey = { fg = c.light_grey },
-  Grey = { fg = c.grey },
-  Red = { fg = c.red },
-  Cyan = { fg = c.cyan },
-  Yellow = { fg = c.yellow },
-  Orange = { fg = c.orange },
-  Green = { fg = c.green },
-  Blue = { fg = c.blue },
-  Purple = { fg = c.purple },
-}
+-- Main setup function
+function M.setup()
+  local cfg = get_config()
+  local colors = c.get(cfg.style)
+  colors = c.extend(colors)
 
-hl.common = {
-  Normal = { fg = c.fg, bg = cfg.transparent and c.none or c.bg0 },
-  Terminal = { fg = c.fg, bg = cfg.transparent and c.none or c.bg0 },
-  EndOfBuffer = { fg = cfg.ending_tildes and c.grey or c.bg0, bg = cfg.transparent and c.none or c.bg0 },
-  FoldColumn = { fg = c.fg, bg = cfg.transparent and c.none or c.bg1 },
-  Folded = { fg = c.fg, bg = cfg.transparent and c.none or c.bg1 },
-  SignColumn = { fg = c.fg, bg = cfg.transparent and c.none or c.bg0 },
-  ToolbarLine = { fg = c.fg },
-  Cursor = { fmt = "reverse" },
-  vCursor = { fmt = "reverse" },
-  iCursor = { fmt = "reverse" },
-  lCursor = { fmt = "reverse" },
-  CursorIM = { fmt = "reverse" },
-  CursorColumn = { bg = c.bg1 },
-  CursorLine = { bg = c.bg1 },
-  ColorColumn = { bg = c.bg1 },
-  CursorLineNr = { fg = c.fg },
-  LineNr = { fg = c.grey },
-  Conceal = { fg = c.grey, bg = c.bg1 },
-  Added = colors.Green,
-  Removed = colors.Red,
-  Changed = colors.Blue,
-  DiffAdd = { fg = c.none, bg = c.diff_add },
-  DiffChange = { fg = c.none, bg = c.diff_change },
-  DiffDelete = { fg = c.none, bg = c.diff_delete },
-  DiffText = { fg = c.none, bg = c.diff_text },
-  DiffAdded = colors.Green,
-  DiffChanged = colors.Blue,
-  DiffRemoved = colors.Red,
-  DiffDeleted = colors.Red,
-  DiffFile = colors.Cyan,
-  DiffIndexLine = colors.Grey,
-  Directory = { fg = c.blue },
-  ErrorMsg = { fg = c.red, fmt = "bold" },
-  WarningMsg = { fg = c.yellow, fmt = "bold" },
-  MoreMsg = { fg = c.blue, fmt = "bold" },
-  CurSearch = { fg = c.bg0, bg = c.orange },
-  IncSearch = { fg = c.bg0, bg = c.orange },
-  Search = { fg = c.bg0, bg = c.bg_yellow },
-  Substitute = { fg = c.bg0, bg = c.green },
-  MatchParen = { fg = c.none, bg = c.bg3 },
-  NonText = { fg = c.grey },
-  Whitespace = { fg = c.grey },
-  SpecialKey = { fg = c.grey },
-  Pmenu = { fg = c.fg, bg = c.bg1 },
-  PmenuSbar = { fg = c.none, bg = c.bg1 },
-  PmenuSel = { fg = c.bg0, bg = c.bg_blue },
-  WildMenu = { fg = c.bg0, bg = c.blue },
-  PmenuThumb = { fg = c.none, bg = c.grey },
-  Question = { fg = c.yellow },
-  SpellBad = { fg = c.none, fmt = "undercurl", sp = c.red },
-  SpellCap = { fg = c.none, fmt = "undercurl", sp = c.yellow },
-  SpellLocal = { fg = c.none, fmt = "undercurl", sp = c.blue },
-  SpellRare = { fg = c.none, fmt = "undercurl", sp = c.purple },
-  StatusLine = { fg = c.fg, bg = c.bg2, fmt = "NONE" },
-  StatusLineTerm = { fg = c.fg, bg = c.bg2, fmt = "NONE" },
-  StatusLineNC = { fg = c.grey, bg = c.bg1, fmt = "NONE" },
-  StatusLineTermNC = { fg = c.grey, bg = c.bg1, fmt = "NONE" },
-  TabLine = { fg = c.fg, bg = c.bg1 },
-  TabLineFill = { fg = c.grey, bg = c.bg1 },
-  TabLineSel = { fg = c.bg0, bg = c.fg },
-  WinSeparator = { fg = c.bg3 },
-  VertSplit = { fg = c.bg3 },
-  Visual = { bg = c.bg3 },
-  VisualNOS = { fg = c.none, bg = c.bg2, fmt = "underline" },
-  QuickFixLine = { fg = c.blue, fmt = "underline" },
-  Debug = { fg = c.yellow },
-  debugPC = { fg = c.bg0, bg = c.green },
-  debugBreakpoint = { fg = c.bg0, bg = c.red },
-  ToolbarButton = { fg = c.bg0, bg = c.bg_blue },
-  FloatBorder = { fg = c.grey, bg = c.bg1 },
-  NormalFloat = { fg = c.fg, bg = c.bg1 },
-  WinBar = { fg = c.fg, bg = cfg.transparent and c.none or c.bg0 },
-  WinBarNC = { fg = c.grey, bg = cfg.transparent and c.none or c.bg0 },
-}
+  -- Transparency handling
+  local bg = cfg.transparent and "NONE" or colors.bg0
+  local bg_dark = cfg.transparent and "NONE" or colors.bg_dark
+  local bg_float = cfg.transparent and "NONE" or colors.bg1
 
-hl.syntax = {
-  String = { fg = c.green, fmt = cfg.code_style.strings },
-  Character = colors.Orange,
-  Number = colors.Orange,
-  Float = colors.Orange,
-  Boolean = colors.Orange,
-  Type = colors.Yellow,
-  Structure = colors.Yellow,
-  StorageClass = colors.Yellow,
-  Identifier = { fg = c.red, fmt = cfg.code_style.variables },
-  Constant = colors.Cyan,
-  PreProc = colors.Purple,
-  PreCondit = colors.Purple,
-  Include = colors.Purple,
-  Keyword = { fg = c.purple, fmt = cfg.code_style.keywords },
-  Define = colors.Purple,
-  Typedef = colors.Yellow,
-  Exception = colors.Purple,
-  Conditional = { fg = c.purple, fmt = cfg.code_style.keywords },
-  Repeat = { fg = c.purple, fmt = cfg.code_style.keywords },
-  Statement = colors.Purple,
-  Macro = colors.Red,
-  Error = colors.Purple,
-  Label = colors.Purple,
-  Special = colors.Red,
-  SpecialChar = colors.Red,
-  Function = { fg = c.blue, fmt = cfg.code_style.functions },
-  Operator = colors.Purple,
-  Title = colors.Cyan,
-  Tag = colors.Green,
-  Delimiter = colors.LightGrey,
-  Comment = { fg = c.grey, fmt = cfg.code_style.comments },
-  SpecialComment = { fg = c.grey, fmt = cfg.code_style.comments },
-  Todo = { fg = c.red, fmt = cfg.code_style.comments },
-}
+  -- Code style configuration
+  local code_style = cfg.code_style or {}
+  local comment_style = code_style.comments or { italic = true }
+  local keyword_style = code_style.keywords or { italic = true }
+  local function_style = code_style.functions or {}
+  local string_style = code_style.strings or {}
+  local variable_style = code_style.variables or {}
+  local type_style = code_style.types or {}
 
-if vim.api.nvim_call_function("has", { "nvim-0.8" }) == 1 then
-  hl.treesitter = {
-    -- Modern standardized nvim-treesitter captures (Neovim 0.9+)
-    -- Attributes
-    ["@attribute"] = colors.Cyan,
-    ["@attribute.builtin"] = colors.Blue,
+  -- Diagnostic configuration
+  local diag_cfg = cfg.diagnostics or {}
+  local diag_undercurl = diag_cfg.undercurl ~= false
+  local diag_background = diag_cfg.background ~= false
 
-    -- Primitives
-    ["@boolean"] = colors.Orange,
-    ["@character"] = colors.Orange,
-    ["@character.special"] = colors.Red,
-    ["@number"] = colors.Orange,
-    ["@number.float"] = colors.Orange,
+  -- ==========================================================================
+  -- EDITOR UI
+  -- ==========================================================================
+  local editor = {
+    -- Basic UI
+    Normal = { fg = colors.fg1, bg = bg },
+    NormalNC = { fg = colors.fg1, bg = cfg.transparent and "NONE" or colors.bg_dark },
+    NormalFloat = { fg = colors.fg1, bg = bg_float },
+    FloatBorder = { fg = colors.border, bg = bg_float },
+    FloatTitle = { fg = colors.azure, bg = bg_float, bold = true },
+    FloatFooter = { fg = colors.fg3, bg = bg_float },
 
+    -- Cursor
+    Cursor = { fg = colors.bg0, bg = colors.fg1 },
+    lCursor = { link = "Cursor" },
+    CursorIM = { link = "Cursor" },
+    TermCursor = { fg = colors.bg0, bg = colors.azure },
+    TermCursorNC = { fg = colors.bg0, bg = colors.fg3 },
+
+    -- Line highlighting
+    CursorLine = { bg = colors.bg1 },
+    CursorLineNr = { fg = colors.amber, bold = true },
+    CursorColumn = { bg = colors.bg1 },
+    ColorColumn = { bg = colors.bg1 },
+
+    -- Line numbers
+    LineNr = { fg = colors.fg3 },
+    LineNrAbove = { fg = colors.fg3 },
+    LineNrBelow = { fg = colors.fg3 },
+    SignColumn = { fg = colors.fg3, bg = bg },
+    FoldColumn = { fg = colors.fg3, bg = bg },
+
+    -- Folding
+    Folded = { fg = colors.fg2, bg = colors.bg2, italic = true },
+
+    -- Search
+    Search = { fg = colors.bg0, bg = colors.amber },
+    IncSearch = { fg = colors.bg0, bg = colors.coral },
+    CurSearch = { fg = colors.bg0, bg = colors.rose },
+    Substitute = { fg = colors.bg0, bg = colors.mauve },
+
+    -- Visual mode
+    Visual = { bg = colors.bg3 },
+    VisualNOS = { bg = colors.bg3 },
+
+    -- Matching
+    MatchParen = { fg = colors.amber, bold = true, underline = true },
+
+    -- Messages
+    MsgArea = { fg = colors.fg1 },
+    ModeMsg = { fg = colors.azure, bold = true },
+    MoreMsg = { fg = colors.sage, bold = true },
+    Question = { fg = colors.azure },
+    ErrorMsg = { fg = colors.error, bold = true },
+    WarningMsg = { fg = colors.warn, bold = true },
+
+    -- Popup menu
+    Pmenu = { fg = colors.fg1, bg = colors.bg2 },
+    PmenuSel = { fg = colors.bg0, bg = colors.azure },
+    PmenuSbar = { bg = colors.bg3 },
+    PmenuThumb = { bg = colors.fg3 },
+    PmenuKind = { fg = colors.iris },
+    PmenuKindSel = { fg = colors.bg0, bg = colors.azure },
+    PmenuExtra = { fg = colors.fg3 },
+    PmenuExtraSel = { fg = colors.bg0, bg = colors.azure },
+
+    -- Statusline
+    StatusLine = { fg = colors.fg1, bg = colors.bg2 },
+    StatusLineNC = { fg = colors.fg3, bg = colors.bg1 },
+    StatusLineTerm = { fg = colors.fg1, bg = colors.bg2 },
+    StatusLineTermNC = { fg = colors.fg3, bg = colors.bg1 },
+
+    -- Tabline
+    TabLine = { fg = colors.fg2, bg = colors.bg1 },
+    TabLineFill = { bg = colors.bg0 },
+    TabLineSel = { fg = colors.fg1, bg = colors.bg0, bold = true },
+
+    -- Window
+    WinBar = { fg = colors.fg1, bg = bg },
+    WinBarNC = { fg = colors.fg3, bg = bg_dark },
+    WinSeparator = { fg = colors.border },
+    VertSplit = { fg = colors.border },
+
+    -- Special characters
+    NonText = { fg = colors.bg3 },
+    EndOfBuffer = { fg = cfg.ending_tildes and colors.fg3 or colors.bg0 },
+    SpecialKey = { fg = colors.fg3 },
+    Whitespace = { fg = colors.bg3 },
+
+    -- Spell
+    SpellBad = { sp = colors.error, undercurl = true },
+    SpellCap = { sp = colors.warn, undercurl = true },
+    SpellLocal = { sp = colors.info, undercurl = true },
+    SpellRare = { sp = colors.hint, undercurl = true },
+
+    -- Diff
+    DiffAdd = { bg = colors.diff_add },
+    DiffChange = { bg = colors.diff_change },
+    DiffDelete = { bg = colors.diff_delete },
+    DiffText = { bg = colors.diff_text },
+
+    -- Directory
+    Directory = { fg = colors.azure, bold = true },
+
+    -- Conceal
+    Conceal = { fg = colors.fg3 },
+
+    -- Title
+    Title = { fg = colors.azure, bold = true },
+
+    -- Wild menu
+    WildMenu = { fg = colors.bg0, bg = colors.azure },
+
+    -- Quick fix
+    QuickFixLine = { bg = colors.bg2 },
+    qfFileName = { fg = colors.azure },
+    qfLineNr = { fg = colors.amber },
+
+    -- Debug
+    Debug = { fg = colors.coral },
+    debugPC = { bg = colors.bg2 },
+    debugBreakpoint = { fg = colors.mauve, bg = colors.bg1 },
+  }
+
+  -- ==========================================================================
+  -- SYNTAX
+  -- ==========================================================================
+  local syntax = {
     -- Comments
-    ["@comment"] = { fg = c.grey, fmt = cfg.code_style.comments },
-    ["@comment.documentation"] = { fg = c.grey, fmt = cfg.code_style.comments },
-    ["@comment.error"] = { fg = c.red, fmt = cfg.code_style.comments },
-    ["@comment.note"] = { fg = c.blue, fmt = cfg.code_style.comments },
-    ["@comment.todo"] = { fg = c.purple, fmt = cfg.code_style.comments },
-    ["@comment.warning"] = { fg = c.yellow, fmt = cfg.code_style.comments },
+    Comment = vim.tbl_extend("force", { fg = colors.comment }, comment_style),
 
     -- Constants
-    ["@constant"] = colors.Cyan,
-    ["@constant.builtin"] = colors.Orange,
-    ["@constant.macro"] = colors.Orange,
+    Constant = { fg = colors.coral },
+    String = vim.tbl_extend("force", { fg = colors.sage }, string_style),
+    Character = { fg = colors.sage },
+    Number = { fg = colors.coral },
+    Boolean = { fg = colors.coral },
+    Float = { fg = colors.coral },
 
-    -- Constructors
-    ["@constructor"] = { fg = c.yellow, fmt = "bold" },
+    -- Identifiers
+    Identifier = vim.tbl_extend("force", { fg = colors.rose }, variable_style),
+    Function = vim.tbl_extend("force", { fg = colors.azure }, function_style),
 
-    -- Diffs
-    ["@diff.plus"] = colors.Green,
-    ["@diff.minus"] = colors.Red,
-    ["@diff.delta"] = colors.Blue,
+    -- Statements
+    Statement = vim.tbl_extend("force", { fg = colors.mauve }, keyword_style),
+    Conditional = vim.tbl_extend("force", { fg = colors.mauve }, keyword_style),
+    Repeat = vim.tbl_extend("force", { fg = colors.mauve }, keyword_style),
+    Label = { fg = colors.mauve },
+    Operator = { fg = colors.cyan },
+    Keyword = vim.tbl_extend("force", { fg = colors.mauve }, keyword_style),
+    Exception = vim.tbl_extend("force", { fg = colors.mauve }, keyword_style),
 
-    -- Functions
-    ["@function"] = { fg = c.blue, fmt = cfg.code_style.functions },
-    ["@function.builtin"] = { fg = c.cyan, fmt = cfg.code_style.functions },
-    ["@function.call"] = { fg = c.blue, fmt = cfg.code_style.functions },
-    ["@function.macro"] = { fg = c.cyan, fmt = cfg.code_style.functions },
-    ["@function.method"] = { fg = c.blue, fmt = cfg.code_style.functions },
-    ["@function.method.call"] = { fg = c.blue, fmt = cfg.code_style.functions },
-
-    -- Keywords
-    ["@keyword"] = { fg = c.purple, fmt = cfg.code_style.keywords },
-    ["@keyword.conditional"] = { fg = c.purple, fmt = cfg.code_style.keywords },
-    ["@keyword.conditional.ternary"] = { fg = c.purple, fmt = cfg.code_style.keywords },
-    ["@keyword.coroutine"] = { fg = c.purple, fmt = cfg.code_style.keywords },
-    ["@keyword.debug"] = { fg = c.red, fmt = cfg.code_style.keywords },
-    ["@keyword.directive"] = colors.Purple,
-    ["@keyword.directive.define"] = colors.Purple,
-    ["@keyword.exception"] = colors.Purple,
-    ["@keyword.function"] = { fg = c.purple, fmt = cfg.code_style.functions },
-    ["@keyword.import"] = colors.Purple,
-    ["@keyword.modifier"] = { fg = c.purple, fmt = cfg.code_style.keywords },
-    ["@keyword.operator"] = { fg = c.purple, fmt = cfg.code_style.keywords },
-    ["@keyword.repeat"] = { fg = c.purple, fmt = cfg.code_style.keywords },
-    ["@keyword.return"] = { fg = c.purple, fmt = cfg.code_style.keywords },
-    ["@keyword.type"] = { fg = c.purple, fmt = cfg.code_style.keywords },
-
-    -- Labels
-    ["@label"] = colors.Red,
-
-    -- Markup (Markdown, etc.)
-    ["@markup.strong"] = { fg = c.fg, fmt = "bold" },
-    ["@markup.italic"] = { fg = c.fg, fmt = "italic" },
-    ["@markup.strikethrough"] = { fg = c.fg, fmt = "strikethrough" },
-    ["@markup.underline"] = { fg = c.fg, fmt = "underline" },
-    ["@markup.heading"] = { fg = c.orange, fmt = "bold" },
-    ["@markup.heading.1"] = { fg = c.red, fmt = "bold" },
-    ["@markup.heading.2"] = { fg = c.purple, fmt = "bold" },
-    ["@markup.heading.3"] = { fg = c.orange, fmt = "bold" },
-    ["@markup.heading.4"] = { fg = c.red, fmt = "bold" },
-    ["@markup.heading.5"] = { fg = c.purple, fmt = "bold" },
-    ["@markup.heading.6"] = { fg = c.orange, fmt = "bold" },
-    ["@markup.link"] = colors.Blue,
-    ["@markup.link.label"] = colors.Cyan,
-    ["@markup.link.url"] = { fg = c.cyan, fmt = "underline" },
-    ["@markup.list"] = colors.Red,
-    ["@markup.list.checked"] = { fg = c.green, fmt = cfg.code_style.comments },
-    ["@markup.list.unchecked"] = { fg = c.red, fmt = cfg.code_style.comments },
-    ["@markup.math"] = colors.Fg,
-    ["@markup.quote"] = { fg = c.grey, fmt = "italic" },
-    ["@markup.raw"] = colors.Green,
-    ["@markup.raw.block"] = colors.Green,
-
-    -- Modules
-    ["@module"] = colors.Yellow,
-    ["@module.builtin"] = colors.Orange,
-
-    -- Misc
-    ["@none"] = colors.Fg,
-    ["@conceal"] = colors.Grey,
-
-    -- Operators
-    ["@operator"] = colors.Fg,
-
-    -- Properties
-    ["@property"] = colors.Cyan,
-
-    -- Punctuation
-    ["@punctuation.bracket"] = colors.LightGrey,
-    ["@punctuation.delimiter"] = colors.LightGrey,
-    ["@punctuation.special"] = colors.Red,
-
-    -- Strings
-    ["@string"] = { fg = c.green, fmt = cfg.code_style.strings },
-    ["@string.documentation"] = { fg = c.green, fmt = cfg.code_style.strings },
-    ["@string.escape"] = { fg = c.red, fmt = cfg.code_style.strings },
-    ["@string.regexp"] = { fg = c.orange, fmt = cfg.code_style.strings },
-    ["@string.special"] = { fg = c.dark_cyan, fmt = cfg.code_style.strings },
-    ["@string.special.path"] = { fg = c.green, fmt = cfg.code_style.strings },
-    ["@string.special.symbol"] = colors.Cyan,
-    ["@string.special.url"] = { fg = c.cyan, fmt = "underline" },
-
-    -- Tags (HTML, JSX, TSX, XML)
-    ["@tag"] = colors.Purple,
-    ["@tag.builtin"] = colors.Purple,
-    ["@tag.attribute"] = colors.Yellow,
-    ["@tag.delimiter"] = colors.Purple,
+    -- Preprocessor
+    PreProc = { fg = colors.iris },
+    Include = { fg = colors.iris },
+    Define = { fg = colors.iris },
+    Macro = { fg = colors.iris },
+    PreCondit = { fg = colors.iris },
 
     -- Types
-    ["@type"] = colors.Yellow,
-    ["@type.builtin"] = colors.Orange,
-    ["@type.definition"] = colors.Yellow,
+    Type = vim.tbl_extend("force", { fg = colors.amber }, type_style),
+    StorageClass = { fg = colors.amber },
+    Structure = { fg = colors.amber },
+    Typedef = { fg = colors.amber },
 
-    -- Variables
-    ["@variable"] = { fg = c.fg, fmt = cfg.code_style.variables },
-    ["@variable.builtin"] = { fg = c.red, fmt = cfg.code_style.variables },
-    ["@variable.member"] = colors.Cyan,
-    ["@variable.parameter"] = colors.Red,
-    ["@variable.parameter.builtin"] = { fg = c.orange, fmt = cfg.code_style.variables },
+    -- Special
+    Special = { fg = colors.mint },
+    SpecialChar = { fg = colors.mint },
+    Tag = { fg = colors.azure },
+    Delimiter = { fg = colors.fg2 },
+    SpecialComment = { fg = colors.lavender, italic = true },
+
+    -- Underlined
+    Underlined = { fg = colors.azure, underline = true },
+
+    -- Bold and Italic
+    Bold = { bold = true },
+    Italic = { italic = true },
+
+    -- Ignore and Error
+    Ignore = { fg = colors.fg3 },
+    Error = { fg = colors.error },
+    Todo = { fg = colors.bg0, bg = colors.amber, bold = true },
+
+    -- Added (for diff)
+    Added = { fg = colors.git_add },
+    Changed = { fg = colors.git_change },
+    Removed = { fg = colors.git_delete },
   }
-  if vim.api.nvim_call_function("has", { "nvim-0.9" }) == 1 then
-    hl.lsp = {
-      ["@lsp.type.comment"] = hl.treesitter["@comment"],
-      ["@lsp.type.enum"] = hl.treesitter["@type"],
-      ["@lsp.type.enumMember"] = hl.treesitter["@constant.builtin"],
-      ["@lsp.type.interface"] = hl.treesitter["@type"],
-      ["@lsp.type.typeParameter"] = hl.treesitter["@type"],
-      ["@lsp.type.keyword"] = hl.treesitter["@keyword"],
-      ["@lsp.type.namespace"] = hl.treesitter["@module"],
-      ["@lsp.type.parameter"] = hl.treesitter["@variable.parameter"],
-      ["@lsp.type.property"] = hl.treesitter["@property"],
-      ["@lsp.type.variable"] = hl.treesitter["@variable"],
-      ["@lsp.type.macro"] = hl.treesitter["@function.macro"],
-      ["@lsp.type.method"] = hl.treesitter["@function.method"],
-      ["@lsp.type.number"] = hl.treesitter["@number"],
-      ["@lsp.type.generic"] = colors.Fg,
-      ["@lsp.type.builtinType"] = hl.treesitter["@type.builtin"],
-      ["@lsp.typemod.method.defaultLibrary"] = hl.treesitter["@function"],
-      ["@lsp.typemod.function.defaultLibrary"] = hl.treesitter["@function"],
-      ["@lsp.typemod.operator.injected"] = hl.treesitter["@operator"],
-      ["@lsp.typemod.string.injected"] = hl.treesitter["@string"],
-      ["@lsp.typemod.variable.defaultLibrary"] = hl.treesitter["@variable.builtin"],
-      ["@lsp.typemod.variable.injected"] = hl.treesitter["@variable"],
-      ["@lsp.typemod.variable.static"] = hl.treesitter["@constant"],
-    }
-  end
-else
-  hl.treesitter = {
-    TSAnnotation = colors.Fg,
-    TSAttribute = colors.Cyan,
-    TSBoolean = colors.Orange,
-    TSCharacter = colors.Orange,
-    TSComment = { fg = c.grey, fmt = cfg.code_style.comments },
-    TSConditional = { fg = c.purple, fmt = cfg.code_style.keywords },
-    TSConstant = colors.Orange,
-    TSConstBuiltin = colors.Orange,
-    TSConstMacro = colors.Orange,
-    TSConstructor = { fg = c.yellow, fmt = "bold" },
-    TSError = colors.Fg,
-    TSException = colors.Purple,
-    TSField = colors.Cyan,
-    TSFloat = colors.Orange,
-    TSFunction = { fg = c.blue, fmt = cfg.code_style.functions },
-    TSFuncBuiltin = { fg = c.cyan, fmt = cfg.code_style.functions },
-    TSFuncMacro = { fg = c.cyan, fmt = cfg.code_style.functions },
-    TSInclude = colors.Purple,
-    TSKeyword = { fg = c.purple, fmt = cfg.code_style.keywords },
-    TSKeywordFunction = { fg = c.purple, fmt = cfg.code_style.functions },
-    TSKeywordOperator = { fg = c.purple, fmt = cfg.code_style.keywords },
-    TSLabel = colors.Red,
-    TSMethod = { fg = c.blue, fmt = cfg.code_style.functions },
-    TSNamespace = colors.Yellow,
-    TSNone = colors.Fg,
-    TSNumber = colors.Orange,
-    TSOperator = colors.Fg,
-    TSParameter = colors.Red,
-    TSParameterReference = colors.Fg,
-    TSProperty = colors.Cyan,
-    TSPunctDelimiter = colors.LightGrey,
-    TSPunctBracket = colors.LightGrey,
-    TSPunctSpecial = colors.Red,
-    TSRepeat = { fg = c.purple, fmt = cfg.code_style.keywords },
-    TSString = { fg = c.green, fmt = cfg.code_style.strings },
-    TSStringRegex = { fg = c.orange, fmt = cfg.code_style.strings },
-    TSStringEscape = { fg = c.red, fmt = cfg.code_style.strings },
-    TSSymbol = colors.Cyan,
-    TSTag = colors.Purple,
-    TSTagDelimiter = colors.Purple,
-    TSText = colors.Fg,
-    TSStrong = { fg = c.fg, fmt = "bold" },
-    TSEmphasis = { fg = c.fg, fmt = "italic" },
-    TSUnderline = { fg = c.fg, fmt = "underline" },
-    TSStrike = { fg = c.fg, fmt = "strikethrough" },
-    TSTitle = { fg = c.orange, fmt = "bold" },
-    TSLiteral = colors.Green,
-    TSURI = { fg = c.cyan, fmt = "underline" },
-    TSMath = colors.Fg,
-    TSTextReference = colors.Blue,
-    TSEnvironment = colors.Fg,
-    TSEnvironmentName = colors.Fg,
-    TSNote = colors.Fg,
-    TSWarning = colors.Fg,
-    TSDanger = colors.Fg,
-    TSType = colors.Yellow,
-    TSTypeBuiltin = colors.Orange,
-    TSVariable = { fg = c.fg, fmt = cfg.code_style.variables },
-    TSVariableBuiltin = { fg = c.red, fmt = cfg.code_style.variables },
+
+  -- ==========================================================================
+  -- DIAGNOSTICS
+  -- ==========================================================================
+  local diagnostics = {
+    -- Virtual text
+    DiagnosticError = { fg = colors.error },
+    DiagnosticWarn = { fg = colors.warn },
+    DiagnosticInfo = { fg = colors.info },
+    DiagnosticHint = { fg = colors.hint },
+    DiagnosticOk = { fg = colors.ok },
+
+    -- Underline
+    DiagnosticUnderlineError = { sp = colors.error, undercurl = diag_undercurl, underline = not diag_undercurl },
+    DiagnosticUnderlineWarn = { sp = colors.warn, undercurl = diag_undercurl, underline = not diag_undercurl },
+    DiagnosticUnderlineInfo = { sp = colors.info, undercurl = diag_undercurl, underline = not diag_undercurl },
+    DiagnosticUnderlineHint = { sp = colors.hint, undercurl = diag_undercurl, underline = not diag_undercurl },
+    DiagnosticUnderlineOk = { sp = colors.ok, undercurl = diag_undercurl, underline = not diag_undercurl },
+
+    -- Virtual text (specific)
+    DiagnosticVirtualTextError = { fg = colors.error, bg = diag_background and colors.error_bg or "NONE" },
+    DiagnosticVirtualTextWarn = { fg = colors.warn, bg = diag_background and colors.warn_bg or "NONE" },
+    DiagnosticVirtualTextInfo = { fg = colors.info, bg = diag_background and colors.info_bg or "NONE" },
+    DiagnosticVirtualTextHint = { fg = colors.hint, bg = diag_background and colors.hint_bg or "NONE" },
+    DiagnosticVirtualTextOk = { fg = colors.ok, bg = diag_background and colors.ok_bg or "NONE" },
+
+    -- Floating window
+    DiagnosticFloatingError = { fg = colors.error },
+    DiagnosticFloatingWarn = { fg = colors.warn },
+    DiagnosticFloatingInfo = { fg = colors.info },
+    DiagnosticFloatingHint = { fg = colors.hint },
+    DiagnosticFloatingOk = { fg = colors.ok },
+
+    -- Signs
+    DiagnosticSignError = { fg = colors.error },
+    DiagnosticSignWarn = { fg = colors.warn },
+    DiagnosticSignInfo = { fg = colors.info },
+    DiagnosticSignHint = { fg = colors.hint },
+    DiagnosticSignOk = { fg = colors.ok },
+
+    -- Deprecated and unnecessary
+    DiagnosticDeprecated = { fg = colors.fg3, strikethrough = true },
+    DiagnosticUnnecessary = { fg = colors.fg3, italic = true },
   }
-end
 
-local diagnostics_error_color = cfg.diagnostics.darker and c.dark_red or c.red
-local diagnostics_hint_color = cfg.diagnostics.darker and c.dark_purple or c.purple
-local diagnostics_warn_color = cfg.diagnostics.darker and c.dark_yellow or c.yellow
-local diagnostics_info_color = cfg.diagnostics.darker and c.dark_cyan or c.cyan
+  -- ==========================================================================
+  -- TREESITTER
+  -- ==========================================================================
+  local treesitter = {
+    -- Identifiers
+    ["@variable"] = vim.tbl_extend("force", { fg = colors.fg1 }, variable_style),
+    ["@variable.builtin"] = { fg = colors.rose, italic = true },
+    ["@variable.parameter"] = { fg = colors.rose },
+    ["@variable.parameter.builtin"] = { fg = colors.rose, italic = true },
+    ["@variable.member"] = { fg = colors.cyan },
 
-hl.plugins.lsp = {
-  LspCxxHlGroupEnumConstant = colors.Orange,
-  LspCxxHlGroupMemberVariable = colors.Orange,
-  LspCxxHlGroupNamespace = colors.Blue,
-  LspCxxHlSkippedRegion = colors.Grey,
-  LspCxxHlSkippedRegionBeginEnd = colors.Red,
+    -- Constants
+    ["@constant"] = { fg = colors.coral },
+    ["@constant.builtin"] = { fg = colors.coral, italic = true },
+    ["@constant.macro"] = { fg = colors.coral },
 
-  DiagnosticError = { fg = c.red },
-  DiagnosticHint = { fg = c.purple },
-  DiagnosticInfo = { fg = c.cyan },
-  DiagnosticWarn = { fg = c.yellow },
-  DiagnosticOk = { fg = c.green },
-  DiagnosticUnnecessary = { fg = c.grey },
-  DiagnosticDeprecated = { fg = c.orange, fmt = "strikethrough" },
+    -- Modules
+    ["@module"] = { fg = colors.lavender },
+    ["@module.builtin"] = { fg = colors.lavender, italic = true },
 
-  DiagnosticVirtualTextError = {
-    bg = cfg.diagnostics.background and util.darken(diagnostics_error_color, 0.1, c.bg0) or c.none,
-    fg = diagnostics_error_color,
-  },
-  DiagnosticVirtualTextWarn = {
-    bg = cfg.diagnostics.background and util.darken(diagnostics_warn_color, 0.1, c.bg0) or c.none,
-    fg = diagnostics_warn_color,
-  },
-  DiagnosticVirtualTextInfo = {
-    bg = cfg.diagnostics.background and util.darken(diagnostics_info_color, 0.1, c.bg0) or c.none,
-    fg = diagnostics_info_color,
-  },
-  DiagnosticVirtualTextHint = {
-    bg = cfg.diagnostics.background and util.darken(diagnostics_hint_color, 0.1, c.bg0) or c.none,
-    fg = diagnostics_hint_color,
-  },
-  DiagnosticVirtualTextOk = {
-    bg = cfg.diagnostics.background and util.darken(c.green, 0.1, c.bg0) or c.none,
-    fg = c.green,
-  },
-  DiagnosticVirtualTextUnnecessary = {
-    bg = cfg.diagnostics.background and util.darken(c.grey, 0.1, c.bg0) or c.none,
-    fg = c.grey,
-  },
-  DiagnosticVirtualTextDeprecated = {
-    bg = cfg.diagnostics.background and util.darken(c.orange, 0.1, c.bg0) or c.none,
-    fg = c.orange,
-    fmt = "strikethrough",
-  },
+    -- Labels
+    ["@label"] = { fg = colors.mauve },
 
-  DiagnosticUnderlineError = { fmt = cfg.diagnostics.undercurl and "undercurl" or "underline", sp = c.red },
-  DiagnosticUnderlineHint = { fmt = cfg.diagnostics.undercurl and "undercurl" or "underline", sp = c.purple },
-  DiagnosticUnderlineInfo = { fmt = cfg.diagnostics.undercurl and "undercurl" or "underline", sp = c.blue },
-  DiagnosticUnderlineWarn = { fmt = cfg.diagnostics.undercurl and "undercurl" or "underline", sp = c.yellow },
-  DiagnosticUnderlineOk = { fmt = cfg.diagnostics.undercurl and "undercurl" or "underline", sp = c.green },
-  DiagnosticUnderlineUnnecessary = { fmt = cfg.diagnostics.undercurl and "undercurl" or "underline", sp = c.grey },
-  DiagnosticUnderlineDeprecated = { fmt = "strikethrough", sp = c.orange },
+    -- Strings
+    ["@string"] = vim.tbl_extend("force", { fg = colors.sage }, string_style),
+    ["@string.documentation"] = { fg = colors.sage, italic = true },
+    ["@string.regexp"] = { fg = colors.mint },
+    ["@string.escape"] = { fg = colors.mint, bold = true },
+    ["@string.special"] = { fg = colors.mint },
+    ["@string.special.symbol"] = { fg = colors.amber },
+    ["@string.special.path"] = { fg = colors.azure },
+    ["@string.special.url"] = { fg = colors.azure, underline = true },
 
-  LspReferenceText = { bg = c.bg2 },
-  LspReferenceWrite = { bg = c.bg2 },
-  LspReferenceRead = { bg = c.bg2 },
+    -- Characters
+    ["@character"] = { fg = colors.sage },
+    ["@character.special"] = { fg = colors.mint },
 
-  LspCodeLens = { fg = c.grey, fmt = cfg.code_style.comments },
-  LspCodeLensSeparator = { fg = c.grey },
-}
+    -- Booleans
+    ["@boolean"] = { fg = colors.coral },
 
-hl.plugins.lsp.LspDiagnosticsDefaultError = hl.plugins.lsp.DiagnosticError
-hl.plugins.lsp.LspDiagnosticsDefaultHint = hl.plugins.lsp.DiagnosticHint
-hl.plugins.lsp.LspDiagnosticsDefaultInformation = hl.plugins.lsp.DiagnosticInfo
-hl.plugins.lsp.LspDiagnosticsDefaultWarning = hl.plugins.lsp.DiagnosticWarn
-hl.plugins.lsp.LspDiagnosticsUnderlineError = hl.plugins.lsp.DiagnosticUnderlineError
-hl.plugins.lsp.LspDiagnosticsUnderlineHint = hl.plugins.lsp.DiagnosticUnderlineHint
-hl.plugins.lsp.LspDiagnosticsUnderlineInformation = hl.plugins.lsp.DiagnosticUnderlineInfo
-hl.plugins.lsp.LspDiagnosticsUnderlineWarning = hl.plugins.lsp.DiagnosticUnderlineWarn
-hl.plugins.lsp.LspDiagnosticsVirtualTextError = hl.plugins.lsp.DiagnosticVirtualTextError
-hl.plugins.lsp.LspDiagnosticsVirtualTextWarning = hl.plugins.lsp.DiagnosticVirtualTextWarn
-hl.plugins.lsp.LspDiagnosticsVirtualTextInformation = hl.plugins.lsp.DiagnosticVirtualTextInfo
-hl.plugins.lsp.LspDiagnosticsVirtualTextHint = hl.plugins.lsp.DiagnosticVirtualTextHint
+    -- Numbers
+    ["@number"] = { fg = colors.coral },
+    ["@number.float"] = { fg = colors.coral },
 
-hl.plugins.cmp = {
-  CmpItemAbbr = colors.Fg,
-  CmpItemAbbrDeprecated = { fg = c.light_grey, fmt = "strikethrough" },
-  CmpItemAbbrMatch = colors.Cyan,
-  CmpItemAbbrMatchFuzzy = { fg = c.cyan, fmt = "underline" },
-  CmpItemMenu = colors.LightGrey,
-  CmpItemKind = { fg = c.purple, fmt = cfg.cmp_itemkind_reverse and "reverse" },
-}
+    -- Types
+    ["@type"] = vim.tbl_extend("force", { fg = colors.amber }, type_style),
+    ["@type.builtin"] = { fg = colors.amber, italic = true },
+    ["@type.definition"] = { fg = colors.amber },
+    ["@type.qualifier"] = { fg = colors.mauve, italic = true },
 
-hl.plugins.blink = {
-  BlinkCmpLabel = colors.Fg,
-  BlinkCmpLabelDeprecated = { fg = c.light_grey, fmt = "strikethrough" },
-  BlinkCmpLabelMatch = colors.Cyan,
-  BlinkCmpDetail = colors.LightGrey,
-  BlinkCmpKind = { fg = c.purple },
-}
+    -- Attributes
+    ["@attribute"] = { fg = colors.iris },
+    ["@attribute.builtin"] = { fg = colors.iris, italic = true },
 
-hl.plugins.whichkey = {
-  WhichKey = colors.Red,
-  WhichKeyDesc = colors.Blue,
-  WhichKeyGroup = colors.Orange,
-  WhichKeySeparator = colors.Green,
-}
+    -- Properties
+    ["@property"] = { fg = colors.cyan },
 
-hl.plugins.gitgutter = {
-  GitGutterAdd = { fg = c.green },
-  GitGutterChange = { fg = c.blue },
-  GitGutterDelete = { fg = c.red },
-}
+    -- Functions
+    ["@function"] = vim.tbl_extend("force", { fg = colors.azure }, function_style),
+    ["@function.builtin"] = { fg = colors.azure, italic = true },
+    ["@function.call"] = vim.tbl_extend("force", { fg = colors.azure }, function_style),
+    ["@function.macro"] = { fg = colors.iris },
+    ["@function.method"] = vim.tbl_extend("force", { fg = colors.azure }, function_style),
+    ["@function.method.call"] = vim.tbl_extend("force", { fg = colors.azure }, function_style),
 
-hl.plugins.gitsigns = {
-  GitSignsAdd = colors.Green,
-  GitSignsAddLn = colors.Green,
-  GitSignsAddNr = colors.Green,
-  GitSignsChange = colors.Blue,
-  GitSignsChangeLn = colors.Blue,
-  GitSignsChangeNr = colors.Blue,
-  GitSignsDelete = colors.Red,
-  GitSignsDeleteLn = colors.Red,
-  GitSignsDeleteNr = colors.Red,
-}
+    -- Constructors
+    ["@constructor"] = { fg = colors.amber },
 
-hl.plugins.nvim_tree = {
-  NvimTreeNormal = { fg = c.fg, bg = cfg.transparent and c.none or c.bg_d },
-  NvimTreeNormalFloat = { fg = c.fg, bg = cfg.transparent and c.none or c.bg_d },
-  NvimTreeVertSplit = { fg = c.bg_d, bg = cfg.transparent and c.none or c.bg_d },
-  NvimTreeEndOfBuffer = { fg = cfg.ending_tildes and c.bg2 or c.bg_d, bg = cfg.transparent and c.none or c.bg_d },
-  NvimTreeRootFolder = { fg = c.orange, fmt = "bold" },
-  NvimTreeGitDirty = colors.Yellow,
-  NvimTreeGitNew = colors.Green,
-  NvimTreeGitDeleted = colors.Red,
-  NvimTreeSpecialFile = { fg = c.yellow, fmt = "underline" },
-  NvimTreeIndentMarker = colors.Fg,
-  NvimTreeImageFile = { fg = c.dark_purple },
-  NvimTreeSymlink = colors.Purple,
-  NvimTreeFolderName = colors.Blue,
-}
+    -- Operators
+    ["@operator"] = { fg = colors.cyan },
 
-hl.plugins.neo_tree = {
-  NeoTreeNormal = { fg = c.fg, bg = cfg.transparent and c.none or c.bg_d },
-  NeoTreeNormalNC = { fg = c.fg, bg = cfg.transparent and c.none or c.bg_d },
-  NeoTreeVertSplit = { fg = c.bg1, bg = cfg.transparent and c.none or c.bg1 },
-  NeoTreeWinSeparator = { fg = c.bg1, bg = cfg.transparent and c.none or c.bg1 },
-  NeoTreeEndOfBuffer = { fg = cfg.ending_tildes and c.bg2 or c.bg_d, bg = cfg.transparent and c.none or c.bg_d },
-  NeoTreeRootName = { fg = c.orange, fmt = "bold" },
-  NeoTreeGitAdded = colors.Green,
-  NeoTreeGitDeleted = colors.Red,
-  NeoTreeGitModified = colors.Yellow,
-  NeoTreeGitConflict = { fg = c.red, fmt = "bold,italic" },
-  NeoTreeGitUntracked = { fg = c.red, fmt = "italic" },
-  NeoTreeIndentMarker = colors.Grey,
-  NeoTreeSymbolicLinkTarget = colors.Purple,
-}
+    -- Keywords
+    ["@keyword"] = vim.tbl_extend("force", { fg = colors.mauve }, keyword_style),
+    ["@keyword.coroutine"] = vim.tbl_extend("force", { fg = colors.mauve }, keyword_style),
+    ["@keyword.function"] = vim.tbl_extend("force", { fg = colors.mauve }, keyword_style),
+    ["@keyword.operator"] = { fg = colors.mauve },
+    ["@keyword.import"] = { fg = colors.iris },
+    ["@keyword.type"] = { fg = colors.mauve },
+    ["@keyword.modifier"] = { fg = colors.mauve, italic = true },
+    ["@keyword.repeat"] = vim.tbl_extend("force", { fg = colors.mauve }, keyword_style),
+    ["@keyword.return"] = vim.tbl_extend("force", { fg = colors.mauve }, keyword_style),
+    ["@keyword.debug"] = { fg = colors.coral },
+    ["@keyword.exception"] = vim.tbl_extend("force", { fg = colors.mauve }, keyword_style),
+    ["@keyword.conditional"] = vim.tbl_extend("force", { fg = colors.mauve }, keyword_style),
+    ["@keyword.conditional.ternary"] = { fg = colors.mauve },
+    ["@keyword.directive"] = { fg = colors.iris },
+    ["@keyword.directive.define"] = { fg = colors.iris },
 
-hl.plugins.telescope = {
-  TelescopeBorder = colors.Red,
-  TelescopePromptBorder = colors.Cyan,
-  TelescopeResultsBorder = colors.Cyan,
-  TelescopePreviewBorder = colors.Cyan,
-  TelescopeMatching = { fg = c.orange, fmt = "bold" },
-  TelescopePromptPrefix = colors.Green,
-  TelescopeSelection = { bg = c.bg2 },
-  TelescopeSelectionCaret = colors.Yellow,
-}
+    -- Punctuation
+    ["@punctuation.delimiter"] = { fg = colors.fg2 },
+    ["@punctuation.bracket"] = { fg = colors.fg2 },
+    ["@punctuation.special"] = { fg = colors.mint },
 
-hl.plugins.dashboard = {
-  DashboardShortCut = colors.Blue,
-  DashboardHeader = colors.Yellow,
-  DashboardCenter = colors.Cyan,
-  DashboardFooter = { fg = c.dark_red, fmt = "italic" },
-}
+    -- Comments
+    ["@comment"] = vim.tbl_extend("force", { fg = colors.comment }, comment_style),
+    ["@comment.documentation"] = vim.tbl_extend("force", { fg = colors.comment }, comment_style),
+    ["@comment.error"] = { fg = colors.bg0, bg = colors.error, bold = true },
+    ["@comment.warning"] = { fg = colors.bg0, bg = colors.warn, bold = true },
+    ["@comment.todo"] = { fg = colors.bg0, bg = colors.info, bold = true },
+    ["@comment.note"] = { fg = colors.bg0, bg = colors.hint, bold = true },
 
-hl.plugins.indent_blankline = {
-  IndentBlanklineIndent1 = colors.Blue,
-  IndentBlanklineIndent2 = colors.Green,
-  IndentBlanklineIndent3 = colors.Cyan,
-  IndentBlanklineIndent4 = colors.LightGrey,
-  IndentBlanklineIndent5 = colors.Purple,
-  IndentBlanklineIndent6 = colors.Red,
-  IndentBlanklineChar = { fg = c.bg1, fmt = "nocombine" },
-  IndentBlanklineContextChar = { fg = c.grey, fmt = "nocombine" },
-  IndentBlanklineContextStart = { sp = c.grey, fmt = "underline" },
-  IndentBlanklineContextSpaceChar = { fmt = "nocombine" },
-  -- Ibl v3
-  IblIndent = { fg = c.bg1, fmt = "nocombine" },
-  IblWhitespace = { fg = c.bg1, fmt = "nocombine" },
-  IblScope = { fg = c.purple, fmt = "nocombine" },
-}
+    -- Markup
+    ["@markup"] = { fg = colors.fg1 },
+    ["@markup.strong"] = { fg = colors.coral, bold = true },
+    ["@markup.italic"] = { fg = colors.iris, italic = true },
+    ["@markup.strikethrough"] = { fg = colors.fg3, strikethrough = true },
+    ["@markup.underline"] = { underline = true },
+    ["@markup.heading"] = { fg = colors.azure, bold = true },
+    ["@markup.heading.1"] = { fg = colors.rose, bold = true },
+    ["@markup.heading.2"] = { fg = colors.azure, bold = true },
+    ["@markup.heading.3"] = { fg = colors.iris, bold = true },
+    ["@markup.heading.4"] = { fg = colors.sage, bold = true },
+    ["@markup.heading.5"] = { fg = colors.amber, bold = true },
+    ["@markup.heading.6"] = { fg = colors.coral, bold = true },
+    ["@markup.quote"] = { fg = colors.sage, italic = true },
+    ["@markup.math"] = { fg = colors.amber },
+    ["@markup.environment"] = { fg = colors.iris },
+    ["@markup.link"] = { fg = colors.azure },
+    ["@markup.link.label"] = { fg = colors.azure },
+    ["@markup.link.url"] = { fg = colors.cyan, underline = true },
+    ["@markup.raw"] = { fg = colors.sage },
+    ["@markup.raw.block"] = { fg = colors.sage },
+    ["@markup.list"] = { fg = colors.mauve },
+    ["@markup.list.checked"] = { fg = colors.ok },
+    ["@markup.list.unchecked"] = { fg = colors.fg3 },
 
-hl.plugins.rainbow_delimiters = {
-  RainbowDelimiterRed = colors.Red,
-  RainbowDelimiterYellow = colors.Yellow,
-  RainbowDelimiterBlue = colors.Blue,
-  RainbowDelimiterOrange = colors.Orange,
-  RainbowDelimiterGreen = colors.Green,
-  RainbowDelimiterViolet = colors.Purple,
-  RainbowDelimiterCyan = colors.Cyan,
-}
+    -- Diff
+    ["@diff.plus"] = { fg = colors.git_add },
+    ["@diff.minus"] = { fg = colors.git_delete },
+    ["@diff.delta"] = { fg = colors.git_change },
 
-hl.plugins.mini = {
-  MiniAnimateCursor = { fmt = "reverse,nocombine" },
-  MiniAnimateNormalFloat = hl.common.NormalFloat,
-  MiniCursorword = { fmt = "underline" },
-  MiniCursorwordCurrent = { fmt = "underline" },
-  MiniDiffSignAdd = colors.Green,
-  MiniDiffSignChange = colors.Blue,
-  MiniDiffSignDelete = colors.Red,
-  MiniIndentscopeSymbol = { fg = c.grey },
-  MiniIndentscopePrefix = { fmt = "nocombine" },
-  MiniJump = { fg = c.purple, fmt = "underline", sp = c.purple },
-  MiniStarterCurrent = { fmt = "nocombine" },
-  MiniStarterFooter = { fg = c.dark_red, fmt = "italic" },
-  MiniStarterHeader = colors.Yellow,
-  MiniStarterInactive = { fg = c.grey, fmt = cfg.code_style.comments },
-  MiniStarterItem = { fg = c.fg, bg = cfg.transparent and c.none or c.bg0 },
-  MiniStarterItemBullet = { fg = c.grey },
-  MiniStarterItemPrefix = { fg = c.yellow },
-  MiniStarterSection = colors.LightGrey,
-  MiniStarterQuery = { fg = c.cyan },
-  MiniStatuslineDevinfo = { fg = c.fg, bg = c.bg2 },
-  MiniStatuslineFileinfo = { fg = c.fg, bg = c.bg2 },
-  MiniStatuslineFilename = { fg = c.grey, bg = c.bg1 },
-  MiniStatuslineInactive = hl.common.StatusLineNC,
-  MiniStatuslineModeCommand = { fg = c.bg0, bg = c.yellow, fmt = "bold" },
-  MiniStatuslineModeInsert = { fg = c.bg0, bg = c.blue, fmt = "bold" },
-  MiniStatuslineModeNormal = { fg = c.bg0, bg = c.green, fmt = "bold" },
-  MiniStatuslineModeOther = { fg = c.bg0, bg = c.cyan, fmt = "bold" },
-  MiniStatuslineModeReplace = { fg = c.bg0, bg = c.red, fmt = "bold" },
-  MiniStatuslineModeVisual = { fg = c.bg0, bg = c.purple, fmt = "bold" },
-  MiniSurround = { fg = c.bg0, bg = c.orange },
-  MiniTablineCurrent = { fmt = "bold" },
-  MiniTablineFill = { fg = c.grey, bg = c.bg1 },
-  MiniTablineHidden = { fg = c.fg, bg = c.bg1 },
-  MiniTablineModifiedCurrent = { fg = c.orange, fmt = "bold,italic" },
-  MiniTablineModifiedHidden = { fg = c.light_grey, bg = c.bg1, fmt = "italic" },
-  MiniTablineModifiedVisible = { fg = c.yellow, bg = c.bg0, fmt = "italic" },
-  MiniTablineTabpagesection = { fg = c.bg0, bg = c.bg_yellow },
-  MiniTablineVisible = { fg = c.light_grey, bg = c.bg0 },
-  MiniTrailspace = { bg = c.red },
-}
+    -- Tags (HTML/JSX)
+    ["@tag"] = { fg = colors.mauve },
+    ["@tag.builtin"] = { fg = colors.mauve },
+    ["@tag.attribute"] = { fg = colors.amber, italic = true },
+    ["@tag.delimiter"] = { fg = colors.fg3 },
 
-hl.plugins.illuminate = {
-  illuminatedWord = { bg = c.bg2, fmt = "bold" },
-  illuminatedCurWord = { bg = c.bg2, fmt = "bold" },
-  IlluminatedWordText = { bg = c.bg2, fmt = "bold" },
-  IlluminatedWordRead = { bg = c.bg2, fmt = "bold" },
-  IlluminatedWordWrite = { bg = c.bg2, fmt = "bold" },
-}
+    -- None
+    ["@none"] = {},
+  }
 
-hl.langs.markdown = {
-  markdownBlockquote = colors.Grey,
-  markdownBold = { fg = c.none, fmt = "bold" },
-  markdownBoldDelimiter = colors.Grey,
-  markdownCode = colors.Green,
-  markdownCodeBlock = colors.Green,
-  markdownCodeDelimiter = colors.Yellow,
-  markdownH1 = { fg = c.red, fmt = "bold" },
-  markdownH2 = { fg = c.purple, fmt = "bold" },
-  markdownH3 = { fg = c.orange, fmt = "bold" },
-  markdownH4 = { fg = c.red, fmt = "bold" },
-  markdownH5 = { fg = c.purple, fmt = "bold" },
-  markdownH6 = { fg = c.orange, fmt = "bold" },
-  markdownHeadingDelimiter = colors.Grey,
-  markdownHeadingRule = colors.Grey,
-  markdownId = colors.Yellow,
-  markdownIdDeclaration = colors.Red,
-  markdownItalic = { fg = c.none, fmt = "italic" },
-  markdownItalicDelimiter = { fg = c.grey, fmt = "italic" },
-  markdownLinkDelimiter = colors.Grey,
-  markdownLinkText = colors.Red,
-  markdownLinkTextDelimiter = colors.Grey,
-  markdownListMarker = colors.Red,
-  markdownOrderedListMarker = colors.Red,
-  markdownRule = colors.Purple,
-  markdownUrl = { fg = c.blue, fmt = "underline" },
-  markdownUrlDelimiter = colors.Grey,
-  markdownUrlTitleDelimiter = colors.Green,
-}
+  -- ==========================================================================
+  -- LSP SEMANTIC TOKENS
+  -- ==========================================================================
+  local lsp_semantic = {
+    ["@lsp.type.class"] = { link = "@type" },
+    ["@lsp.type.comment"] = { link = "@comment" },
+    ["@lsp.type.decorator"] = { link = "@attribute" },
+    ["@lsp.type.enum"] = { link = "@type" },
+    ["@lsp.type.enumMember"] = { link = "@constant" },
+    ["@lsp.type.event"] = { link = "@type" },
+    ["@lsp.type.function"] = { link = "@function" },
+    ["@lsp.type.interface"] = { fg = colors.mint },
+    ["@lsp.type.keyword"] = { link = "@keyword" },
+    ["@lsp.type.macro"] = { link = "@function.macro" },
+    ["@lsp.type.method"] = { link = "@function.method" },
+    ["@lsp.type.modifier"] = { link = "@keyword.modifier" },
+    ["@lsp.type.namespace"] = { link = "@module" },
+    ["@lsp.type.number"] = { link = "@number" },
+    ["@lsp.type.operator"] = { link = "@operator" },
+    ["@lsp.type.parameter"] = { link = "@variable.parameter" },
+    ["@lsp.type.property"] = { link = "@property" },
+    ["@lsp.type.regexp"] = { link = "@string.regexp" },
+    ["@lsp.type.string"] = { link = "@string" },
+    ["@lsp.type.struct"] = { link = "@type" },
+    ["@lsp.type.type"] = { link = "@type" },
+    ["@lsp.type.typeParameter"] = { fg = colors.amber, italic = true },
+    ["@lsp.type.variable"] = { link = "@variable" },
 
-hl.langs.vim = {
-  vimOption = colors.Red,
-  vimSetEqual = colors.Yellow,
-  vimMap = colors.Purple,
-  vimMapModKey = colors.Orange,
-  vimNotation = colors.Red,
-  vimMapLhs = colors.Fg,
-  vimMapRhs = colors.Blue,
-  vimVar = { fg = c.fg, fmt = cfg.code_style.variables },
-  vimCommentTitle = { fg = c.light_grey, fmt = cfg.code_style.comments },
-}
+    -- Modifiers
+    ["@lsp.mod.abstract"] = { italic = true },
+    ["@lsp.mod.async"] = { italic = true },
+    ["@lsp.mod.declaration"] = {},
+    ["@lsp.mod.defaultLibrary"] = { italic = true },
+    ["@lsp.mod.definition"] = {},
+    ["@lsp.mod.deprecated"] = { strikethrough = true },
+    ["@lsp.mod.documentation"] = { italic = true },
+    ["@lsp.mod.modification"] = {},
+    ["@lsp.mod.readonly"] = { italic = true },
+    ["@lsp.mod.static"] = { bold = true },
 
-local lsp_kind_icons_color = {
-  Default = c.purple,
-  Array = c.yellow,
-  Boolean = c.orange,
-  Class = c.yellow,
-  Color = c.green,
-  Constant = c.orange,
-  Constructor = c.blue,
-  Enum = c.purple,
-  EnumMember = c.yellow,
-  Event = c.yellow,
-  Field = c.purple,
-  File = c.blue,
-  Folder = c.orange,
-  Function = c.blue,
-  Interface = c.green,
-  Key = c.cyan,
-  Keyword = c.cyan,
-  Method = c.blue,
-  Module = c.orange,
-  Namespace = c.red,
-  Null = c.grey,
-  Number = c.orange,
-  Object = c.red,
-  Operator = c.red,
-  Package = c.yellow,
-  Property = c.cyan,
-  Reference = c.orange,
-  Snippet = c.red,
-  String = c.green,
-  Struct = c.purple,
-  Text = c.light_grey,
-  TypeParameter = c.red,
-  Unit = c.green,
-  Value = c.orange,
-  Variable = c.purple,
-}
+    -- Type + modifier combinations
+    ["@lsp.typemod.class.declaration"] = { fg = colors.amber, bold = true },
+    ["@lsp.typemod.function.declaration"] = vim.tbl_extend("force", { fg = colors.azure, bold = true }, function_style),
+    ["@lsp.typemod.method.declaration"] = vim.tbl_extend("force", { fg = colors.azure, bold = true }, function_style),
+    ["@lsp.typemod.variable.declaration"] = vim.tbl_extend("force", { fg = colors.fg1 }, variable_style),
+    ["@lsp.typemod.variable.readonly"] = { fg = colors.coral },
+    ["@lsp.typemod.parameter.declaration"] = { fg = colors.rose },
+    ["@lsp.typemod.property.readonly"] = { fg = colors.cyan, italic = true },
+  }
 
-function M.setup()
-  -- define cmp kind highlights with lsp_kind_icons_color
-  for kind, color in pairs(lsp_kind_icons_color) do
-    hl.plugins.cmp["CmpItemKind" .. kind] = { fg = color, fmt = cfg.cmp_itemkind_reverse and "reverse" }
-    hl.plugins.blink["BlinkCmpKind" .. kind] = { fg = color }
-  end
+  -- ==========================================================================
+  -- BUILT-IN LSP
+  -- ==========================================================================
+  local lsp = {
+    LspReferenceText = { bg = colors.bg2 },
+    LspReferenceRead = { bg = colors.bg2 },
+    LspReferenceWrite = { bg = colors.bg2, underline = true },
+    LspSignatureActiveParameter = { fg = colors.amber, bold = true },
+    LspCodeLens = { fg = colors.comment },
+    LspCodeLensSeparator = { fg = colors.border },
+    LspInlayHint = { fg = colors.fg3, bg = colors.bg1, italic = true },
+    LspInfoBorder = { fg = colors.border },
+  }
 
-  vim_highlights(hl.common)
-  vim_highlights(hl.syntax)
-  vim_highlights(hl.treesitter)
-  if hl.lsp then
-    vim_highlights(hl.lsp)
-  end
-  for _, group in pairs(hl.langs) do
-    vim_highlights(group)
-  end
-  for _, group in pairs(hl.plugins) do
-    vim_highlights(group)
-  end
+  -- ==========================================================================
+  -- PLUGINS
+  -- ==========================================================================
 
-  -- User defined highlights
-  local function replace_color(prefix, color_name)
-    if not color_name then
-      return ""
-    end
-    if color_name:sub(1, 1) == "$" then
-      local name = color_name:sub(2, -1)
-      color_name = c[name]
-      if not color_name then
-        vim.schedule(function()
-          vim.notify('drift.nvim: unknown color "' .. name .. '"', vim.log.levels.ERROR, { title = "drift.nvim" })
-        end)
-        return ""
-      end
-    end
-    return prefix .. "=" .. color_name
-  end
+  -- nvim-cmp
+  local cmp = {
+    CmpItemAbbr = { fg = colors.fg1 },
+    CmpItemAbbrDeprecated = { fg = colors.fg3, strikethrough = true },
+    CmpItemAbbrMatch = { fg = colors.azure, bold = true },
+    CmpItemAbbrMatchFuzzy = { fg = colors.azure, bold = true },
+    CmpItemMenu = { fg = colors.fg3 },
+    CmpItemKind = { fg = colors.iris },
+    CmpItemKindText = { fg = colors.fg1 },
+    CmpItemKindMethod = { fg = colors.azure },
+    CmpItemKindFunction = { fg = colors.azure },
+    CmpItemKindConstructor = { fg = colors.amber },
+    CmpItemKindField = { fg = colors.cyan },
+    CmpItemKindVariable = { fg = colors.rose },
+    CmpItemKindClass = { fg = colors.amber },
+    CmpItemKindInterface = { fg = colors.mint },
+    CmpItemKindModule = { fg = colors.lavender },
+    CmpItemKindProperty = { fg = colors.cyan },
+    CmpItemKindUnit = { fg = colors.coral },
+    CmpItemKindValue = { fg = colors.coral },
+    CmpItemKindEnum = { fg = colors.amber },
+    CmpItemKindKeyword = { fg = colors.mauve },
+    CmpItemKindSnippet = { fg = colors.sage },
+    CmpItemKindColor = { fg = colors.blossom },
+    CmpItemKindFile = { fg = colors.azure },
+    CmpItemKindReference = { fg = colors.iris },
+    CmpItemKindFolder = { fg = colors.azure },
+    CmpItemKindEnumMember = { fg = colors.coral },
+    CmpItemKindConstant = { fg = colors.coral },
+    CmpItemKindStruct = { fg = colors.amber },
+    CmpItemKindEvent = { fg = colors.iris },
+    CmpItemKindOperator = { fg = colors.cyan },
+    CmpItemKindTypeParameter = { fg = colors.amber },
+    CmpItemKindCopilot = { fg = colors.sage },
+  }
 
-  local current_config = vim.g.drift_config or {}
-  local highlights = current_config.highlights or {}
+  -- blink.cmp
+  local blink = {
+    BlinkCmpMenu = { fg = colors.fg1, bg = colors.bg2 },
+    BlinkCmpMenuBorder = { fg = colors.border, bg = colors.bg2 },
+    BlinkCmpMenuSelection = { bg = colors.bg3 },
+    BlinkCmpLabel = { fg = colors.fg1 },
+    BlinkCmpLabelDeprecated = { fg = colors.fg3, strikethrough = true },
+    BlinkCmpLabelMatch = { fg = colors.azure, bold = true },
+    BlinkCmpKind = { fg = colors.iris },
+    BlinkCmpKindText = { fg = colors.fg1 },
+    BlinkCmpKindMethod = { fg = colors.azure },
+    BlinkCmpKindFunction = { fg = colors.azure },
+    BlinkCmpKindConstructor = { fg = colors.amber },
+    BlinkCmpKindField = { fg = colors.cyan },
+    BlinkCmpKindVariable = { fg = colors.rose },
+    BlinkCmpKindClass = { fg = colors.amber },
+    BlinkCmpKindInterface = { fg = colors.mint },
+    BlinkCmpKindModule = { fg = colors.lavender },
+    BlinkCmpKindProperty = { fg = colors.cyan },
+    BlinkCmpKindUnit = { fg = colors.coral },
+    BlinkCmpKindValue = { fg = colors.coral },
+    BlinkCmpKindEnum = { fg = colors.amber },
+    BlinkCmpKindKeyword = { fg = colors.mauve },
+    BlinkCmpKindSnippet = { fg = colors.sage },
+    BlinkCmpKindColor = { fg = colors.blossom },
+    BlinkCmpKindFile = { fg = colors.azure },
+    BlinkCmpKindReference = { fg = colors.iris },
+    BlinkCmpKindFolder = { fg = colors.azure },
+    BlinkCmpKindEnumMember = { fg = colors.coral },
+    BlinkCmpKindConstant = { fg = colors.coral },
+    BlinkCmpKindStruct = { fg = colors.amber },
+    BlinkCmpKindEvent = { fg = colors.iris },
+    BlinkCmpKindOperator = { fg = colors.cyan },
+    BlinkCmpKindTypeParameter = { fg = colors.amber },
+    BlinkCmpDoc = { fg = colors.fg1, bg = colors.bg1 },
+    BlinkCmpDocBorder = { fg = colors.border, bg = colors.bg1 },
+    BlinkCmpDocCursorLine = { bg = colors.bg2 },
+    BlinkCmpSignatureHelp = { fg = colors.fg1, bg = colors.bg1 },
+    BlinkCmpSignatureHelpBorder = { fg = colors.border, bg = colors.bg1 },
+    BlinkCmpSignatureHelpActiveParameter = { fg = colors.amber, bold = true },
+    BlinkCmpGhostText = { fg = colors.fg3, italic = true },
+  }
 
-  for group_name, group_settings in pairs(highlights) do
-    vim.api.nvim_command(
-      string.format(
-        "highlight %s %s %s %s %s",
-        group_name,
-        replace_color("guifg", group_settings.fg),
-        replace_color("guibg", group_settings.bg),
-        replace_color("guisp", group_settings.sp),
-        replace_color("gui", group_settings.fmt)
-      )
-    )
+  -- Telescope
+  local telescope = {
+    TelescopeNormal = { fg = colors.fg1, bg = bg_float },
+    TelescopeBorder = { fg = colors.border, bg = bg_float },
+    TelescopeTitle = { fg = colors.azure, bold = true },
+    TelescopePromptNormal = { fg = colors.fg1, bg = colors.bg2 },
+    TelescopePromptBorder = { fg = colors.border, bg = colors.bg2 },
+    TelescopePromptTitle = { fg = colors.bg0, bg = colors.azure, bold = true },
+    TelescopePromptPrefix = { fg = colors.azure },
+    TelescopePromptCounter = { fg = colors.fg3 },
+    TelescopeResultsNormal = { fg = colors.fg1, bg = bg_float },
+    TelescopeResultsBorder = { fg = colors.border, bg = bg_float },
+    TelescopeResultsTitle = { fg = colors.azure },
+    TelescopePreviewNormal = { fg = colors.fg1, bg = bg_float },
+    TelescopePreviewBorder = { fg = colors.border, bg = bg_float },
+    TelescopePreviewTitle = { fg = colors.bg0, bg = colors.sage, bold = true },
+    TelescopeSelection = { bg = colors.bg3 },
+    TelescopeSelectionCaret = { fg = colors.azure },
+    TelescopeMultiSelection = { fg = colors.iris },
+    TelescopeMultiIcon = { fg = colors.iris },
+    TelescopeMatching = { fg = colors.amber, bold = true },
+    TelescopePreviewLine = { bg = colors.bg2 },
+    TelescopePreviewMatch = { fg = colors.amber, bold = true },
+  }
+
+  -- Neo-tree
+  local neo_tree = {
+    NeoTreeNormal = { fg = colors.fg1, bg = bg_dark },
+    NeoTreeNormalNC = { fg = colors.fg1, bg = bg_dark },
+    NeoTreeVertSplit = { fg = colors.border, bg = bg_dark },
+    NeoTreeWinSeparator = { fg = colors.border, bg = bg_dark },
+    NeoTreeEndOfBuffer = { fg = bg_dark, bg = bg_dark },
+    NeoTreeRootName = { fg = colors.azure, bold = true },
+    NeoTreeGitAdded = { fg = colors.git_add },
+    NeoTreeGitDeleted = { fg = colors.git_delete },
+    NeoTreeGitModified = { fg = colors.git_change },
+    NeoTreeGitConflict = { fg = colors.error, bold = true },
+    NeoTreeGitUntracked = { fg = colors.warn },
+    NeoTreeGitIgnored = { fg = colors.fg3 },
+    NeoTreeGitStaged = { fg = colors.sage },
+    NeoTreeIndentMarker = { fg = colors.border },
+    NeoTreeFileIcon = { fg = colors.azure },
+    NeoTreeFileName = { fg = colors.fg1 },
+    NeoTreeFileNameOpened = { fg = colors.azure },
+    NeoTreeSymbolicLinkTarget = { fg = colors.mint },
+    NeoTreeDimText = { fg = colors.fg3 },
+    NeoTreeFilterTerm = { fg = colors.azure, bold = true },
+    NeoTreeTitleBar = { fg = colors.bg0, bg = colors.azure, bold = true },
+    NeoTreeFloatBorder = { fg = colors.border },
+    NeoTreeFloatTitle = { fg = colors.azure, bold = true },
+    NeoTreeTabActive = { fg = colors.fg1, bg = bg, bold = true },
+    NeoTreeTabInactive = { fg = colors.fg3, bg = colors.bg1 },
+    NeoTreeTabSeparatorActive = { fg = bg, bg = bg },
+    NeoTreeTabSeparatorInactive = { fg = colors.bg1, bg = colors.bg1 },
+    NeoTreeModified = { fg = colors.amber },
+  }
+
+  -- nvim-tree
+  local nvim_tree = {
+    NvimTreeNormal = { fg = colors.fg1, bg = bg_dark },
+    NvimTreeNormalNC = { fg = colors.fg1, bg = bg_dark },
+    NvimTreeRootFolder = { fg = colors.azure, bold = true },
+    NvimTreeGitDirty = { fg = colors.git_change },
+    NvimTreeGitNew = { fg = colors.git_add },
+    NvimTreeGitDeleted = { fg = colors.git_delete },
+    NvimTreeGitStaged = { fg = colors.sage },
+    NvimTreeGitMerge = { fg = colors.warn },
+    NvimTreeGitRenamed = { fg = colors.iris },
+    NvimTreeGitIgnored = { fg = colors.fg3 },
+    NvimTreeSpecialFile = { fg = colors.amber },
+    NvimTreeImageFile = { fg = colors.blossom },
+    NvimTreeIndentMarker = { fg = colors.border },
+    NvimTreeSymlink = { fg = colors.mint },
+    NvimTreeFolderIcon = { fg = colors.azure },
+    NvimTreeFolderName = { fg = colors.azure },
+    NvimTreeOpenedFolderName = { fg = colors.azure },
+    NvimTreeEmptyFolderName = { fg = colors.fg3 },
+    NvimTreeExecFile = { fg = colors.sage, bold = true },
+    NvimTreeWinSeparator = { fg = colors.border, bg = bg_dark },
+    NvimTreeEndOfBuffer = { fg = bg_dark },
+    NvimTreeWindowPicker = { fg = colors.bg0, bg = colors.azure, bold = true },
+    NvimTreeModifiedFile = { fg = colors.amber },
+  }
+
+  -- Gitsigns
+  local gitsigns = {
+    GitSignsAdd = { fg = colors.git_add },
+    GitSignsAddNr = { fg = colors.git_add },
+    GitSignsAddLn = { bg = colors.diff_add },
+    GitSignsChange = { fg = colors.git_change },
+    GitSignsChangeNr = { fg = colors.git_change },
+    GitSignsChangeLn = { bg = colors.diff_change },
+    GitSignsDelete = { fg = colors.git_delete },
+    GitSignsDeleteNr = { fg = colors.git_delete },
+    GitSignsDeleteLn = { bg = colors.diff_delete },
+    GitSignsCurrentLineBlame = { fg = colors.fg3, italic = true },
+    GitSignsAddInline = { bg = colors.diff_add },
+    GitSignsChangeInline = { bg = colors.diff_change },
+    GitSignsDeleteInline = { bg = colors.diff_delete },
+    GitSignsAddPreview = { fg = colors.git_add },
+    GitSignsDeletePreview = { fg = colors.git_delete },
+    GitSignsStagedAdd = { fg = util.blend(colors.git_add, colors.bg0, 0.5) },
+    GitSignsStagedChange = { fg = util.blend(colors.git_change, colors.bg0, 0.5) },
+    GitSignsStagedDelete = { fg = util.blend(colors.git_delete, colors.bg0, 0.5) },
+  }
+
+  -- Git gutter (vim-gitgutter)
+  local gitgutter = {
+    GitGutterAdd = { fg = colors.git_add },
+    GitGutterChange = { fg = colors.git_change },
+    GitGutterDelete = { fg = colors.git_delete },
+    GitGutterChangeDelete = { fg = colors.warn },
+  }
+
+  -- Which-key
+  local which_key = {
+    WhichKey = { fg = colors.azure },
+    WhichKeyGroup = { fg = colors.iris },
+    WhichKeySeparator = { fg = colors.fg3 },
+    WhichKeyDesc = { fg = colors.fg1 },
+    WhichKeyValue = { fg = colors.fg3 },
+    WhichKeyFloat = { bg = colors.bg1 },
+    WhichKeyBorder = { fg = colors.border },
+    WhichKeyNormal = { fg = colors.fg1, bg = colors.bg1 },
+  }
+
+  -- Dashboard
+  local dashboard = {
+    DashboardHeader = { fg = colors.azure },
+    DashboardCenter = { fg = colors.fg1 },
+    DashboardShortCut = { fg = colors.amber },
+    DashboardFooter = { fg = colors.fg3, italic = true },
+    -- alpha-nvim
+    AlphaHeader = { fg = colors.azure },
+    AlphaButtons = { fg = colors.fg1 },
+    AlphaShortcut = { fg = colors.amber },
+    AlphaFooter = { fg = colors.fg3, italic = true },
+  }
+
+  -- Indent-blankline
+  local indent_blankline = {
+    IndentBlanklineChar = { fg = colors.bg2, nocombine = true },
+    IndentBlanklineContextChar = { fg = colors.iris, nocombine = true },
+    IndentBlanklineContextStart = { sp = colors.iris, underline = true },
+    IndentBlanklineSpaceChar = { fg = colors.bg2, nocombine = true },
+    IndentBlanklineSpaceCharBlankline = { fg = colors.bg2, nocombine = true },
+    -- ibl (v3)
+    IblIndent = { fg = colors.bg2, nocombine = true },
+    IblScope = { fg = colors.iris, nocombine = true },
+    IblWhitespace = { fg = colors.bg2, nocombine = true },
+  }
+
+  -- Rainbow delimiters
+  local rainbow = {
+    RainbowDelimiterRed = { fg = colors.mauve },
+    RainbowDelimiterYellow = { fg = colors.amber },
+    RainbowDelimiterBlue = { fg = colors.azure },
+    RainbowDelimiterOrange = { fg = colors.coral },
+    RainbowDelimiterGreen = { fg = colors.sage },
+    RainbowDelimiterViolet = { fg = colors.iris },
+    RainbowDelimiterCyan = { fg = colors.cyan },
+  }
+
+  -- mini.nvim
+  local mini = {
+    -- mini.statusline
+    MiniStatuslineModeNormal = { fg = colors.bg0, bg = colors.azure, bold = true },
+    MiniStatuslineModeInsert = { fg = colors.bg0, bg = colors.sage, bold = true },
+    MiniStatuslineModeVisual = { fg = colors.bg0, bg = colors.iris, bold = true },
+    MiniStatuslineModeReplace = { fg = colors.bg0, bg = colors.mauve, bold = true },
+    MiniStatuslineModeCommand = { fg = colors.bg0, bg = colors.amber, bold = true },
+    MiniStatuslineModeOther = { fg = colors.bg0, bg = colors.mint, bold = true },
+    MiniStatuslineDevinfo = { fg = colors.fg1, bg = colors.bg2 },
+    MiniStatuslineFilename = { fg = colors.fg2, bg = colors.bg1 },
+    MiniStatuslineFileinfo = { fg = colors.fg1, bg = colors.bg2 },
+    MiniStatuslineInactive = { fg = colors.fg3, bg = colors.bg1 },
+
+    -- mini.tabline
+    MiniTablineCurrent = { fg = colors.fg1, bg = bg, bold = true },
+    MiniTablineVisible = { fg = colors.fg1, bg = colors.bg1 },
+    MiniTablineHidden = { fg = colors.fg3, bg = colors.bg1 },
+    MiniTablineModifiedCurrent = { fg = colors.amber, bg = bg, bold = true },
+    MiniTablineModifiedVisible = { fg = colors.amber, bg = colors.bg1 },
+    MiniTablineModifiedHidden = { fg = util.blend(colors.amber, colors.bg0, 0.5), bg = colors.bg1 },
+    MiniTablineFill = { bg = colors.bg_dark },
+    MiniTablineTabpagesection = { fg = colors.bg0, bg = colors.azure, bold = true },
+
+    -- mini.starter
+    MiniStarterCurrent = { nocombine = true },
+    MiniStarterFooter = { fg = colors.fg3, italic = true },
+    MiniStarterHeader = { fg = colors.azure },
+    MiniStarterInactive = { fg = colors.fg3 },
+    MiniStarterItem = { fg = colors.fg1 },
+    MiniStarterItemBullet = { fg = colors.border },
+    MiniStarterItemPrefix = { fg = colors.amber },
+    MiniStarterSection = { fg = colors.iris },
+    MiniStarterQuery = { fg = colors.azure, bold = true },
+
+    -- mini.cursorword
+    MiniCursorword = { bg = colors.bg2 },
+    MiniCursorwordCurrent = { bg = colors.bg2 },
+
+    -- mini.indentscope
+    MiniIndentscopeSymbol = { fg = colors.iris },
+    MiniIndentscopePrefix = { nocombine = true },
+
+    -- mini.jump
+    MiniJump = { fg = colors.bg0, bg = colors.amber },
+    MiniJump2dSpot = { fg = colors.amber, bold = true },
+    MiniJump2dSpotAhead = { fg = colors.mint },
+    MiniJump2dSpotUnique = { fg = colors.coral, bold = true },
+
+    -- mini.surround
+    MiniSurround = { fg = colors.bg0, bg = colors.amber },
+
+    -- mini.trailspace
+    MiniTrailspace = { bg = colors.mauve },
+
+    -- mini.hipatterns
+    MiniHipatternsFixme = { fg = colors.bg0, bg = colors.error, bold = true },
+    MiniHipatternsHack = { fg = colors.bg0, bg = colors.warn, bold = true },
+    MiniHipatternsTodo = { fg = colors.bg0, bg = colors.info, bold = true },
+    MiniHipatternsNote = { fg = colors.bg0, bg = colors.hint, bold = true },
+
+    -- mini.files
+    MiniFilesNormal = { fg = colors.fg1, bg = bg_float },
+    MiniFilesBorder = { fg = colors.border, bg = bg_float },
+    MiniFilesTitle = { fg = colors.azure, bold = true },
+    MiniFilesTitleFocused = { fg = colors.bg0, bg = colors.azure, bold = true },
+    MiniFilesDirectory = { fg = colors.azure },
+    MiniFilesFile = { fg = colors.fg1 },
+    MiniFilesCursorLine = { bg = colors.bg2 },
+
+    -- mini.pick
+    MiniPickNormal = { fg = colors.fg1, bg = bg_float },
+    MiniPickBorder = { fg = colors.border, bg = bg_float },
+    MiniPickBorderBusy = { fg = colors.amber, bg = bg_float },
+    MiniPickBorderText = { fg = colors.azure, bg = bg_float },
+    MiniPickHeader = { fg = colors.iris },
+    MiniPickMatchCurrent = { bg = colors.bg2 },
+    MiniPickMatchMarked = { fg = colors.amber, bg = colors.bg2 },
+    MiniPickMatchRanges = { fg = colors.azure, bold = true },
+    MiniPickPrompt = { fg = colors.azure },
+    MiniPickPreviewLine = { bg = colors.bg2 },
+    MiniPickPreviewRegion = { bg = colors.bg3 },
+
+    -- mini.notify
+    MiniNotifyNormal = { fg = colors.fg1, bg = bg_float },
+    MiniNotifyBorder = { fg = colors.border, bg = bg_float },
+    MiniNotifyTitle = { fg = colors.azure, bold = true },
+
+    -- mini.diff
+    MiniDiffSignAdd = { fg = colors.git_add },
+    MiniDiffSignChange = { fg = colors.git_change },
+    MiniDiffSignDelete = { fg = colors.git_delete },
+    MiniDiffOverAdd = { bg = colors.diff_add },
+    MiniDiffOverChange = { bg = colors.diff_change },
+    MiniDiffOverContext = { bg = colors.bg2 },
+    MiniDiffOverDelete = { bg = colors.diff_delete },
+
+    -- mini.clue
+    MiniClueTitle = { fg = colors.azure, bold = true },
+    MiniClueDescGroup = { fg = colors.iris },
+    MiniClueDescSingle = { fg = colors.fg1 },
+    MiniClueNextKey = { fg = colors.amber },
+    MiniClueNextKeyWithPostkeys = { fg = colors.coral },
+    MiniClueSeparator = { fg = colors.border },
+  }
+
+  -- illuminate
+  local illuminate = {
+    IlluminatedWordText = { bg = colors.bg2 },
+    IlluminatedWordRead = { bg = colors.bg2 },
+    IlluminatedWordWrite = { bg = colors.bg2, underline = true },
+  }
+
+  -- Lazy.nvim
+  local lazy = {
+    LazyH1 = { fg = colors.bg0, bg = colors.azure, bold = true },
+    LazyH2 = { fg = colors.azure, bold = true },
+    LazyButton = { fg = colors.fg1, bg = colors.bg2 },
+    LazyButtonActive = { fg = colors.bg0, bg = colors.azure },
+    LazyComment = { fg = colors.fg3 },
+    LazyCommit = { fg = colors.coral },
+    LazyCommitIssue = { fg = colors.amber },
+    LazyCommitScope = { fg = colors.iris, italic = true },
+    LazyCommitType = { fg = colors.azure },
+    LazyDimmed = { fg = colors.fg3 },
+    LazyDir = { fg = colors.azure },
+    LazyLocal = { fg = colors.warn },
+    LazyNoCond = { fg = colors.error },
+    LazyNormal = { fg = colors.fg1, bg = bg_float },
+    LazyProgressDone = { fg = colors.sage },
+    LazyProgressTodo = { fg = colors.bg3 },
+    LazyProp = { fg = colors.fg3 },
+    LazyReasonCmd = { fg = colors.amber },
+    LazyReasonEvent = { fg = colors.amber },
+    LazyReasonFt = { fg = colors.sage },
+    LazyReasonImport = { fg = colors.iris },
+    LazyReasonKeys = { fg = colors.rose },
+    LazyReasonPlugin = { fg = colors.azure },
+    LazyReasonRequire = { fg = colors.iris },
+    LazyReasonRuntime = { fg = colors.lavender },
+    LazyReasonSource = { fg = colors.coral },
+    LazyReasonStart = { fg = colors.sage },
+    LazySpecial = { fg = colors.iris },
+    LazyTaskError = { fg = colors.error },
+    LazyTaskOutput = { fg = colors.fg1 },
+    LazyUrl = { fg = colors.azure, underline = true },
+    LazyValue = { fg = colors.sage },
+  }
+
+  -- Mason
+  local mason = {
+    MasonNormal = { fg = colors.fg1, bg = bg_float },
+    MasonHeader = { fg = colors.bg0, bg = colors.azure, bold = true },
+    MasonHeaderSecondary = { fg = colors.bg0, bg = colors.iris, bold = true },
+    MasonHighlight = { fg = colors.azure },
+    MasonHighlightBlock = { fg = colors.bg0, bg = colors.azure },
+    MasonHighlightBlockBold = { fg = colors.bg0, bg = colors.azure, bold = true },
+    MasonHighlightBlockBoldSecondary = { fg = colors.bg0, bg = colors.iris, bold = true },
+    MasonHighlightBlockSecondary = { fg = colors.bg0, bg = colors.iris },
+    MasonHighlightSecondary = { fg = colors.iris },
+    MasonMuted = { fg = colors.fg3 },
+    MasonMutedBlock = { fg = colors.fg3, bg = colors.bg2 },
+    MasonMutedBlockBold = { fg = colors.fg3, bg = colors.bg2, bold = true },
+  }
+
+  -- Noice
+  local noice = {
+    NoiceCmdline = { fg = colors.fg1 },
+    NoiceCmdlineIcon = { fg = colors.azure },
+    NoiceCmdlineIconSearch = { fg = colors.amber },
+    NoiceCmdlinePopup = { fg = colors.fg1, bg = colors.bg2 },
+    NoiceCmdlinePopupBorder = { fg = colors.border },
+    NoiceCmdlinePopupBorderSearch = { fg = colors.amber },
+    NoiceCmdlinePrompt = { fg = colors.azure },
+    NoiceConfirm = { fg = colors.fg1, bg = colors.bg2 },
+    NoiceConfirmBorder = { fg = colors.border },
+    NoiceFormatConfirm = { fg = colors.azure },
+    NoiceFormatConfirmDefault = { fg = colors.bg0, bg = colors.azure },
+    NoiceFormatDate = { fg = colors.fg3 },
+    NoiceFormatEvent = { fg = colors.fg3 },
+    NoiceFormatKind = { fg = colors.iris },
+    NoiceFormatLevelDebug = { fg = colors.fg3 },
+    NoiceFormatLevelError = { fg = colors.error },
+    NoiceFormatLevelInfo = { fg = colors.info },
+    NoiceFormatLevelOff = { fg = colors.fg3 },
+    NoiceFormatLevelTrace = { fg = colors.fg3 },
+    NoiceFormatLevelWarn = { fg = colors.warn },
+    NoiceFormatProgressDone = { fg = colors.bg0, bg = colors.sage },
+    NoiceFormatProgressTodo = { fg = colors.fg1, bg = colors.bg2 },
+    NoiceFormatTitle = { fg = colors.azure },
+    NoiceLspProgressClient = { fg = colors.azure },
+    NoiceLspProgressSpinner = { fg = colors.sage },
+    NoiceLspProgressTitle = { fg = colors.fg1 },
+    NoiceMini = { fg = colors.fg1, bg = colors.bg2 },
+    NoicePopup = { fg = colors.fg1, bg = bg_float },
+    NoicePopupBorder = { fg = colors.border },
+    NoicePopupmenu = { fg = colors.fg1, bg = colors.bg2 },
+    NoicePopupmenuBorder = { fg = colors.border },
+    NoicePopupmenuMatch = { fg = colors.azure, bold = true },
+    NoicePopupmenuSelected = { bg = colors.bg3 },
+    NoiceScrollbar = { bg = colors.bg3 },
+    NoiceScrollbarThumb = { bg = colors.fg3 },
+    NoiceSplit = { fg = colors.fg1, bg = bg },
+    NoiceSplitBorder = { fg = colors.border },
+    NoiceVirtualText = { fg = colors.iris },
+  }
+
+  -- Notify
+  local notify = {
+    NotifyBackground = { bg = colors.bg0 },
+    NotifyERRORBorder = { fg = colors.error },
+    NotifyERRORIcon = { fg = colors.error },
+    NotifyERRORTitle = { fg = colors.error },
+    NotifyERRORBody = { fg = colors.fg1 },
+    NotifyWARNBorder = { fg = colors.warn },
+    NotifyWARNIcon = { fg = colors.warn },
+    NotifyWARNTitle = { fg = colors.warn },
+    NotifyWARNBody = { fg = colors.fg1 },
+    NotifyINFOBorder = { fg = colors.info },
+    NotifyINFOIcon = { fg = colors.info },
+    NotifyINFOTitle = { fg = colors.info },
+    NotifyINFOBody = { fg = colors.fg1 },
+    NotifyDEBUGBorder = { fg = colors.fg3 },
+    NotifyDEBUGIcon = { fg = colors.fg3 },
+    NotifyDEBUGTitle = { fg = colors.fg3 },
+    NotifyDEBUGBody = { fg = colors.fg1 },
+    NotifyTRACEBorder = { fg = colors.iris },
+    NotifyTRACEIcon = { fg = colors.iris },
+    NotifyTRACETitle = { fg = colors.iris },
+    NotifyTRACEBody = { fg = colors.fg1 },
+  }
+
+  -- flash.nvim
+  local flash = {
+    FlashBackdrop = { fg = colors.fg3 },
+    FlashCurrent = { fg = colors.bg0, bg = colors.amber, bold = true },
+    FlashLabel = { fg = colors.bg0, bg = colors.rose, bold = true },
+    FlashMatch = { fg = colors.bg0, bg = colors.azure },
+    FlashCursor = { reverse = true },
+    FlashPrompt = { fg = colors.azure },
+    FlashPromptIcon = { fg = colors.amber },
+  }
+
+  -- Trouble
+  local trouble = {
+    TroubleNormal = { fg = colors.fg1, bg = bg_float },
+    TroubleNormalNC = { fg = colors.fg1, bg = bg_float },
+    TroubleCount = { fg = colors.iris },
+    TroubleDirectory = { fg = colors.azure },
+    TroubleFileName = { fg = colors.azure },
+    TroubleIconArray = { fg = colors.amber },
+    TroubleIconBoolean = { fg = colors.coral },
+    TroubleIconClass = { fg = colors.amber },
+    TroubleIconConstant = { fg = colors.coral },
+    TroubleIconConstructor = { fg = colors.amber },
+    TroubleIconDirectory = { fg = colors.azure },
+    TroubleIconEnum = { fg = colors.amber },
+    TroubleIconEnumMember = { fg = colors.coral },
+    TroubleIconEvent = { fg = colors.iris },
+    TroubleIconField = { fg = colors.cyan },
+    TroubleIconFile = { fg = colors.azure },
+    TroubleIconFunction = { fg = colors.azure },
+    TroubleIconInterface = { fg = colors.mint },
+    TroubleIconKey = { fg = colors.mauve },
+    TroubleIconMethod = { fg = colors.azure },
+    TroubleIconModule = { fg = colors.lavender },
+    TroubleIconNamespace = { fg = colors.lavender },
+    TroubleIconNull = { fg = colors.coral },
+    TroubleIconNumber = { fg = colors.coral },
+    TroubleIconObject = { fg = colors.amber },
+    TroubleIconOperator = { fg = colors.cyan },
+    TroubleIconPackage = { fg = colors.lavender },
+    TroubleIconProperty = { fg = colors.cyan },
+    TroubleIconString = { fg = colors.sage },
+    TroubleIconStruct = { fg = colors.amber },
+    TroubleIconTypeParameter = { fg = colors.amber },
+    TroubleIconVariable = { fg = colors.rose },
+    TroubleIndent = { fg = colors.border },
+    TroubleIndentFoldClosed = { fg = colors.iris },
+    TroubleIndentFoldOpen = { fg = colors.iris },
+    TroubleIndentLast = { fg = colors.border },
+    TroubleIndentMiddle = { fg = colors.border },
+    TroubleIndentTop = { fg = colors.border },
+    TroubleIndentWs = { fg = colors.border },
+    TroublePos = { fg = colors.fg3 },
+    TroublePreview = { bg = colors.bg2 },
+    TroubleSource = { fg = colors.fg3 },
+    TroubleText = { fg = colors.fg1 },
+  }
+
+  -- nvim-navic (breadcrumbs)
+  local navic = {
+    NavicText = { fg = colors.fg1 },
+    NavicSeparator = { fg = colors.fg3 },
+    NavicIconsArray = { fg = colors.amber },
+    NavicIconsBoolean = { fg = colors.coral },
+    NavicIconsClass = { fg = colors.amber },
+    NavicIconsConstant = { fg = colors.coral },
+    NavicIconsConstructor = { fg = colors.amber },
+    NavicIconsEnum = { fg = colors.amber },
+    NavicIconsEnumMember = { fg = colors.coral },
+    NavicIconsEvent = { fg = colors.iris },
+    NavicIconsField = { fg = colors.cyan },
+    NavicIconsFile = { fg = colors.azure },
+    NavicIconsFunction = { fg = colors.azure },
+    NavicIconsInterface = { fg = colors.mint },
+    NavicIconsKey = { fg = colors.mauve },
+    NavicIconsMethod = { fg = colors.azure },
+    NavicIconsModule = { fg = colors.lavender },
+    NavicIconsNamespace = { fg = colors.lavender },
+    NavicIconsNull = { fg = colors.coral },
+    NavicIconsNumber = { fg = colors.coral },
+    NavicIconsObject = { fg = colors.amber },
+    NavicIconsOperator = { fg = colors.cyan },
+    NavicIconsPackage = { fg = colors.lavender },
+    NavicIconsProperty = { fg = colors.cyan },
+    NavicIconsString = { fg = colors.sage },
+    NavicIconsStruct = { fg = colors.amber },
+    NavicIconsTypeParameter = { fg = colors.amber },
+    NavicIconsVariable = { fg = colors.rose },
+  }
+
+  -- Aerial
+  local aerial = {
+    AerialNormal = { fg = colors.fg1, bg = bg_float },
+    AerialLine = { bg = colors.bg2 },
+    AerialLineNC = { bg = colors.bg1 },
+    AerialArrayIcon = { fg = colors.amber },
+    AerialBooleanIcon = { fg = colors.coral },
+    AerialClassIcon = { fg = colors.amber },
+    AerialConstantIcon = { fg = colors.coral },
+    AerialConstructorIcon = { fg = colors.amber },
+    AerialEnumIcon = { fg = colors.amber },
+    AerialEnumMemberIcon = { fg = colors.coral },
+    AerialEventIcon = { fg = colors.iris },
+    AerialFieldIcon = { fg = colors.cyan },
+    AerialFileIcon = { fg = colors.azure },
+    AerialFunctionIcon = { fg = colors.azure },
+    AerialInterfaceIcon = { fg = colors.mint },
+    AerialKeyIcon = { fg = colors.mauve },
+    AerialMethodIcon = { fg = colors.azure },
+    AerialModuleIcon = { fg = colors.lavender },
+    AerialNamespaceIcon = { fg = colors.lavender },
+    AerialNullIcon = { fg = colors.coral },
+    AerialNumberIcon = { fg = colors.coral },
+    AerialObjectIcon = { fg = colors.amber },
+    AerialOperatorIcon = { fg = colors.cyan },
+    AerialPackageIcon = { fg = colors.lavender },
+    AerialPropertyIcon = { fg = colors.cyan },
+    AerialStringIcon = { fg = colors.sage },
+    AerialStructIcon = { fg = colors.amber },
+    AerialTypeParameterIcon = { fg = colors.amber },
+    AerialVariableIcon = { fg = colors.rose },
+  }
+
+  -- Bufferline
+  local bufferline = {
+    BufferLineFill = { bg = colors.bg_dark },
+    BufferLineBackground = { fg = colors.fg3, bg = colors.bg1 },
+    BufferLineBuffer = { fg = colors.fg3, bg = colors.bg1 },
+    BufferLineBufferSelected = { fg = colors.fg1, bg = bg, bold = true },
+    BufferLineBufferVisible = { fg = colors.fg2, bg = colors.bg1 },
+    BufferLineCloseButton = { fg = colors.fg3, bg = colors.bg1 },
+    BufferLineCloseButtonSelected = { fg = colors.mauve, bg = bg },
+    BufferLineCloseButtonVisible = { fg = colors.fg3, bg = colors.bg1 },
+    BufferLineDiagnostic = { fg = colors.fg3, bg = colors.bg1 },
+    BufferLineDiagnosticSelected = { fg = colors.fg3, bg = bg },
+    BufferLineDiagnosticVisible = { fg = colors.fg3, bg = colors.bg1 },
+    BufferLineError = { fg = colors.error, bg = colors.bg1 },
+    BufferLineErrorDiagnostic = { fg = colors.error, bg = colors.bg1 },
+    BufferLineErrorDiagnosticSelected = { fg = colors.error, bg = bg },
+    BufferLineErrorDiagnosticVisible = { fg = colors.error, bg = colors.bg1 },
+    BufferLineErrorSelected = { fg = colors.error, bg = bg },
+    BufferLineErrorVisible = { fg = colors.error, bg = colors.bg1 },
+    BufferLineHint = { fg = colors.hint, bg = colors.bg1 },
+    BufferLineHintDiagnostic = { fg = colors.hint, bg = colors.bg1 },
+    BufferLineHintDiagnosticSelected = { fg = colors.hint, bg = bg },
+    BufferLineHintDiagnosticVisible = { fg = colors.hint, bg = colors.bg1 },
+    BufferLineHintSelected = { fg = colors.hint, bg = bg },
+    BufferLineHintVisible = { fg = colors.hint, bg = colors.bg1 },
+    BufferLineIndicatorSelected = { fg = colors.azure, bg = bg },
+    BufferLineIndicatorVisible = { fg = colors.bg1, bg = colors.bg1 },
+    BufferLineInfo = { fg = colors.info, bg = colors.bg1 },
+    BufferLineInfoDiagnostic = { fg = colors.info, bg = colors.bg1 },
+    BufferLineInfoDiagnosticSelected = { fg = colors.info, bg = bg },
+    BufferLineInfoDiagnosticVisible = { fg = colors.info, bg = colors.bg1 },
+    BufferLineInfoSelected = { fg = colors.info, bg = bg },
+    BufferLineInfoVisible = { fg = colors.info, bg = colors.bg1 },
+    BufferLineModified = { fg = colors.amber, bg = colors.bg1 },
+    BufferLineModifiedSelected = { fg = colors.amber, bg = bg },
+    BufferLineModifiedVisible = { fg = colors.amber, bg = colors.bg1 },
+    BufferLineNumbers = { fg = colors.fg3, bg = colors.bg1 },
+    BufferLineNumbersSelected = { fg = colors.azure, bg = bg },
+    BufferLineNumbersVisible = { fg = colors.fg3, bg = colors.bg1 },
+    BufferLineSeparator = { fg = colors.bg_dark, bg = colors.bg1 },
+    BufferLineSeparatorSelected = { fg = colors.bg_dark, bg = bg },
+    BufferLineSeparatorVisible = { fg = colors.bg_dark, bg = colors.bg1 },
+    BufferLineTab = { fg = colors.fg3, bg = colors.bg1 },
+    BufferLineTabClose = { fg = colors.mauve, bg = colors.bg1 },
+    BufferLineTabSelected = { fg = colors.azure, bg = bg },
+    BufferLineTabSeparator = { fg = colors.bg_dark, bg = colors.bg1 },
+    BufferLineTabSeparatorSelected = { fg = colors.bg_dark, bg = bg },
+    BufferLineWarning = { fg = colors.warn, bg = colors.bg1 },
+    BufferLineWarningDiagnostic = { fg = colors.warn, bg = colors.bg1 },
+    BufferLineWarningDiagnosticSelected = { fg = colors.warn, bg = bg },
+    BufferLineWarningDiagnosticVisible = { fg = colors.warn, bg = colors.bg1 },
+    BufferLineWarningSelected = { fg = colors.warn, bg = bg },
+    BufferLineWarningVisible = { fg = colors.warn, bg = colors.bg1 },
+  }
+
+  -- Snacks
+  local snacks = {
+    SnacksNormal = { fg = colors.fg1, bg = bg_float },
+    SnacksPicker = { fg = colors.fg1, bg = bg_float },
+    SnacksPickerBorder = { fg = colors.border, bg = bg_float },
+    SnacksPickerTitle = { fg = colors.azure, bold = true },
+    SnacksPickerPrompt = { fg = colors.azure },
+    SnacksPickerMatch = { fg = colors.amber, bold = true },
+    SnacksPickerSelected = { bg = colors.bg3 },
+    SnacksPickerDir = { fg = colors.fg3 },
+    SnacksPickerFile = { fg = colors.fg1 },
+    SnacksPickerGitAdded = { fg = colors.git_add },
+    SnacksPickerGitDeleted = { fg = colors.git_delete },
+    SnacksPickerGitModified = { fg = colors.git_change },
+    SnacksNotifierNormal = { fg = colors.fg1, bg = bg_float },
+    SnacksNotifierBorder = { fg = colors.border, bg = bg_float },
+    SnacksNotifierTitle = { fg = colors.azure, bold = true },
+    SnacksNotifierError = { fg = colors.error },
+    SnacksNotifierWarn = { fg = colors.warn },
+    SnacksNotifierInfo = { fg = colors.info },
+    SnacksNotifierDebug = { fg = colors.fg3 },
+    SnacksNotifierTrace = { fg = colors.iris },
+    SnacksDashboardNormal = { fg = colors.fg1, bg = bg },
+    SnacksDashboardHeader = { fg = colors.azure },
+    SnacksDashboardFooter = { fg = colors.fg3, italic = true },
+    SnacksDashboardKey = { fg = colors.amber },
+    SnacksDashboardIcon = { fg = colors.azure },
+    SnacksDashboardDesc = { fg = colors.fg1 },
+    SnacksDashboardDir = { fg = colors.fg3 },
+    SnacksDashboardFile = { fg = colors.azure },
+    SnacksDashboardSpecial = { fg = colors.iris },
+    SnacksIndent = { fg = colors.bg2 },
+    SnacksIndentScope = { fg = colors.iris },
+    SnacksZenNormal = { fg = colors.fg1, bg = bg },
+    SnacksInputNormal = { fg = colors.fg1, bg = bg_float },
+    SnacksInputBorder = { fg = colors.border, bg = bg_float },
+    SnacksInputTitle = { fg = colors.azure, bold = true },
+    SnacksInputPrompt = { fg = colors.azure },
+  }
+
+  -- Fidget
+  local fidget = {
+    FidgetTask = { fg = colors.fg3 },
+    FidgetTitle = { fg = colors.azure, bold = true },
+  }
+
+  -- Neogit
+  local neogit = {
+    NeogitBranch = { fg = colors.iris },
+    NeogitRemote = { fg = colors.azure },
+    NeogitHunkHeader = { fg = colors.fg1, bg = colors.bg2 },
+    NeogitHunkHeaderHighlight = { fg = colors.azure, bg = colors.bg2 },
+    NeogitDiffContext = { fg = colors.fg2, bg = colors.bg1 },
+    NeogitDiffContextHighlight = { fg = colors.fg1, bg = colors.bg1 },
+    NeogitDiffAdd = { fg = colors.git_add, bg = colors.diff_add },
+    NeogitDiffAddHighlight = { fg = colors.git_add, bg = colors.diff_add },
+    NeogitDiffDelete = { fg = colors.git_delete, bg = colors.diff_delete },
+    NeogitDiffDeleteHighlight = { fg = colors.git_delete, bg = colors.diff_delete },
+    NeogitNotificationInfo = { fg = colors.info },
+    NeogitNotificationWarning = { fg = colors.warn },
+    NeogitNotificationError = { fg = colors.error },
+    NeogitGraphAuthor = { fg = colors.coral },
+    NeogitGraphRed = { fg = colors.mauve },
+    NeogitGraphWhite = { fg = colors.fg1 },
+    NeogitGraphYellow = { fg = colors.amber },
+    NeogitGraphGreen = { fg = colors.sage },
+    NeogitGraphCyan = { fg = colors.cyan },
+    NeogitGraphBlue = { fg = colors.azure },
+    NeogitGraphPurple = { fg = colors.iris },
+    NeogitGraphGray = { fg = colors.fg3 },
+    NeogitGraphOrange = { fg = colors.coral },
+    NeogitGraphBoldWhite = { fg = colors.fg1, bold = true },
+    NeogitGraphBoldRed = { fg = colors.mauve, bold = true },
+    NeogitGraphBoldYellow = { fg = colors.amber, bold = true },
+    NeogitGraphBoldGreen = { fg = colors.sage, bold = true },
+    NeogitGraphBoldCyan = { fg = colors.cyan, bold = true },
+    NeogitGraphBoldBlue = { fg = colors.azure, bold = true },
+    NeogitGraphBoldPurple = { fg = colors.iris, bold = true },
+    NeogitGraphBoldGray = { fg = colors.fg3, bold = true },
+  }
+
+  -- Diffview
+  local diffview = {
+    DiffviewNormal = { fg = colors.fg1, bg = bg_dark },
+    DiffviewPrimary = { fg = colors.azure },
+    DiffviewSecondary = { fg = colors.iris },
+    DiffviewDim1 = { fg = colors.fg3 },
+    DiffviewFilePanelTitle = { fg = colors.azure, bold = true },
+    DiffviewFilePanelCounter = { fg = colors.iris },
+    DiffviewFilePanelFileName = { fg = colors.fg1 },
+    DiffviewFilePanelPath = { fg = colors.fg3 },
+    DiffviewFilePanelInsertions = { fg = colors.git_add },
+    DiffviewFilePanelDeletions = { fg = colors.git_delete },
+    DiffviewFilePanelConflicts = { fg = colors.error },
+    DiffviewFilePanelRootPath = { fg = colors.fg3 },
+    DiffviewFilePanelSelected = { bg = colors.bg2 },
+    DiffviewStatusAdded = { fg = colors.git_add },
+    DiffviewStatusUntracked = { fg = colors.git_add },
+    DiffviewStatusModified = { fg = colors.git_change },
+    DiffviewStatusRenamed = { fg = colors.iris },
+    DiffviewStatusCopied = { fg = colors.azure },
+    DiffviewStatusTypeChange = { fg = colors.amber },
+    DiffviewStatusUnmerged = { fg = colors.warn },
+    DiffviewStatusUnknown = { fg = colors.fg3 },
+    DiffviewStatusDeleted = { fg = colors.git_delete },
+    DiffviewStatusBroken = { fg = colors.error },
+    DiffviewHash = { fg = colors.coral },
+    DiffviewReference = { fg = colors.iris },
+  }
+
+  -- Lspsaga
+  local lspsaga = {
+    SagaNormal = { fg = colors.fg1, bg = bg_float },
+    SagaBorder = { fg = colors.border, bg = bg_float },
+    SagaExpand = { fg = colors.coral },
+    SagaCollapse = { fg = colors.coral },
+    SagaBeacon = { bg = colors.amber },
+    SagaCodeAction = { fg = colors.amber },
+    SagaFinderFname = { fg = colors.azure },
+    SagaTitle = { fg = colors.azure, bold = true },
+    SagaToggle = { fg = colors.iris },
+    SagaCount = { fg = colors.bg0, bg = colors.iris },
+    SagaVirtLine = { fg = colors.border },
+    SagaSpinnerTitle = { fg = colors.iris },
+    SagaSpinner = { fg = colors.iris },
+    SagaText = { fg = colors.fg1 },
+    SagaSelect = { fg = colors.iris },
+    SagaSearch = { fg = colors.amber, bold = true },
+    SagaFilename = { fg = colors.azure },
+    SagaDetail = { fg = colors.fg3, italic = true },
+    SagaInCurrent = { fg = colors.amber },
+    SagaImpIcon = { fg = colors.iris },
+    SagaSep = { fg = colors.border },
+    ActionFix = { fg = colors.sage },
+    ActionPreviewTitle = { fg = colors.azure, bold = true },
+    ActionPreviewNormal = { fg = colors.fg1, bg = bg_float },
+    ActionPreviewBorder = { fg = colors.border },
+    FinderCount = { fg = colors.iris },
+    FinderIcon = { fg = colors.azure },
+    FinderSelection = { bg = colors.bg2, bold = true },
+    FinderSpinner = { fg = colors.iris },
+    FinderSpinnerTitle = { fg = colors.iris, bold = true },
+    FinderType = { fg = colors.amber },
+    FinderVirtText = { fg = colors.fg3 },
+    CallHierarchyIcon = { fg = colors.iris },
+    CallHierarchyTitle = { fg = colors.azure, bold = true },
+    HoverNormal = { fg = colors.fg1, bg = bg_float },
+    HoverBorder = { fg = colors.border, bg = bg_float },
+    RenameBorder = { fg = colors.border, bg = bg_float },
+    RenameNormal = { fg = colors.fg1, bg = bg_float },
+    RenameMatch = { fg = colors.amber, bold = true },
+    DefinitionBorder = { fg = colors.border },
+    DefinitionNormal = { fg = colors.fg1, bg = bg_float },
+    DefinitionArrow = { fg = colors.iris },
+    DefinitionFile = { fg = colors.azure },
+    DefinitionIcon = { fg = colors.azure },
+    DefinitionCount = { fg = colors.iris },
+    TypeDefinitionBorder = { fg = colors.border },
+    TypeDefinitionNormal = { fg = colors.fg1, bg = bg_float },
+    TerminalBorder = { fg = colors.border },
+    TerminalNormal = { fg = colors.fg1, bg = bg_float },
+    DiagnosticBorder = { fg = colors.border },
+    DiagnosticNormal = { fg = colors.fg1, bg = bg_float },
+    DiagnosticText = { fg = colors.fg1 },
+    DiagnosticSource = { fg = colors.fg3, italic = true },
+    DiagnosticMap = { fg = colors.iris },
+    DiagnosticLineCol = { fg = colors.fg3 },
+    LspSagaLightBulb = { fg = colors.amber },
+    CodeActionNumber = { fg = colors.iris },
+    OutlineIndent = { fg = colors.border },
+    OutlineFoldPrefix = { fg = colors.coral },
+    OutlineDetail = { fg = colors.fg3 },
+  }
+
+  -- Copilot
+  local copilot = {
+    CopilotSuggestion = { fg = colors.fg3, italic = true },
+    CopilotAnnotation = { fg = colors.fg3, italic = true },
+  }
+
+  -- nvim-dap
+  local dap = {
+    DapBreakpoint = { fg = colors.mauve },
+    DapBreakpointCondition = { fg = colors.amber },
+    DapBreakpointRejected = { fg = colors.fg3 },
+    DapLogPoint = { fg = colors.azure },
+    DapStopped = { fg = colors.sage },
+    DapStoppedLine = { bg = colors.bg2 },
+    DapUIScope = { fg = colors.azure },
+    DapUIType = { fg = colors.amber },
+    DapUIModifiedValue = { fg = colors.amber, bold = true },
+    DapUIDecoration = { fg = colors.azure },
+    DapUIThread = { fg = colors.sage },
+    DapUIStoppedThread = { fg = colors.azure },
+    DapUISource = { fg = colors.iris },
+    DapUILineNumber = { fg = colors.azure },
+    DapUIFloatBorder = { fg = colors.border },
+    DapUIWatchesEmpty = { fg = colors.fg3 },
+    DapUIWatchesValue = { fg = colors.sage },
+    DapUIWatchesError = { fg = colors.error },
+    DapUIBreakpointsPath = { fg = colors.azure },
+    DapUIBreakpointsInfo = { fg = colors.sage },
+    DapUIBreakpointsCurrentLine = { fg = colors.sage, bold = true },
+    DapUIBreakpointsDisabledLine = { fg = colors.fg3 },
+    DapUICurrentFrameName = { fg = colors.sage, bold = true },
+    DapUIStepOver = { fg = colors.azure },
+    DapUIStepInto = { fg = colors.azure },
+    DapUIStepBack = { fg = colors.azure },
+    DapUIStepOut = { fg = colors.azure },
+    DapUIStop = { fg = colors.mauve },
+    DapUIPlayPause = { fg = colors.sage },
+    DapUIRestart = { fg = colors.sage },
+    DapUIUnavailable = { fg = colors.fg3 },
+    DapUIWinSelect = { fg = colors.azure, bold = true },
+  }
+
+  -- nvim-neotest
+  local neotest = {
+    NeotestAdapterName = { fg = colors.iris, bold = true },
+    NeotestBorder = { fg = colors.border },
+    NeotestDir = { fg = colors.azure },
+    NeotestExpandMarker = { fg = colors.fg3 },
+    NeotestFailed = { fg = colors.error },
+    NeotestFile = { fg = colors.azure },
+    NeotestFocused = { bold = true },
+    NeotestIndent = { fg = colors.border },
+    NeotestMarked = { fg = colors.amber, bold = true },
+    NeotestNamespace = { fg = colors.lavender },
+    NeotestPassed = { fg = colors.ok },
+    NeotestRunning = { fg = colors.amber },
+    NeotestSkipped = { fg = colors.hint },
+    NeotestTarget = { fg = colors.iris },
+    NeotestTest = { fg = colors.fg1 },
+    NeotestUnknown = { fg = colors.fg3 },
+    NeotestWatching = { fg = colors.amber },
+    NeotestWinSelect = { fg = colors.azure, bold = true },
+  }
+
+  -- Oil.nvim
+  local oil = {
+    OilDir = { fg = colors.azure },
+    OilDirIcon = { fg = colors.azure },
+    OilFile = { fg = colors.fg1 },
+    OilLink = { fg = colors.mint },
+    OilLinkTarget = { fg = colors.fg3 },
+    OilSocket = { fg = colors.iris },
+    OilCopy = { fg = colors.sage },
+    OilMove = { fg = colors.amber },
+    OilChange = { fg = colors.warn },
+    OilCreate = { fg = colors.git_add },
+    OilDelete = { fg = colors.git_delete },
+    OilPermissionNone = { fg = colors.fg3 },
+    OilPermissionRead = { fg = colors.sage },
+    OilPermissionWrite = { fg = colors.amber },
+    OilPermissionExecute = { fg = colors.mauve },
+    OilTypeDir = { fg = colors.azure },
+    OilTypeFile = { fg = colors.fg1 },
+    OilTypeLink = { fg = colors.mint },
+    OilTypeFifo = { fg = colors.iris },
+    OilTypeSocket = { fg = colors.iris },
+    OilSize = { fg = colors.fg3 },
+    OilMtime = { fg = colors.fg3 },
+  }
+
+  -- Harpoon
+  local harpoon = {
+    HarpoonWindow = { fg = colors.fg1, bg = bg_float },
+    HarpoonBorder = { fg = colors.border, bg = bg_float },
+    HarpoonTitle = { fg = colors.azure, bold = true },
+    HarpoonCurrentFile = { fg = colors.sage },
+  }
+
+  -- Octo.nvim
+  local octo = {
+    OctoEditable = { bg = colors.bg1 },
+    OctoViewer = { link = "Comment" },
+    OctoBubble = { fg = colors.fg1, bg = colors.bg2 },
+    OctoUser = { fg = colors.azure },
+    OctoUserViewer = { fg = colors.sage },
+    OctoReaction = { fg = colors.amber },
+    OctoReactionViewer = { fg = colors.sage },
+    OctoPassingTest = { fg = colors.ok },
+    OctoFailingTest = { fg = colors.error },
+    OctoPullAdditions = { fg = colors.git_add },
+    OctoPullDeletions = { fg = colors.git_delete },
+    OctoPullModifications = { fg = colors.git_change },
+    OctoIssueTitle = { fg = colors.azure, bold = true },
+    OctoPullTitle = { fg = colors.azure, bold = true },
+    OctoIssueId = { fg = colors.iris },
+    OctoPullId = { fg = colors.iris },
+    OctoStateOpen = { fg = colors.sage },
+    OctoStateClosed = { fg = colors.mauve },
+    OctoStateMerged = { fg = colors.iris },
+    OctoStatePending = { fg = colors.amber },
+    OctoStatusColumn = { fg = colors.fg3 },
+    OctoTimelineMarker = { fg = colors.border },
+    OctoTimelineItemHeading = { fg = colors.azure },
+    OctoSymbol = { fg = colors.iris },
+    OctoDate = { fg = colors.fg3 },
+  }
+
+  -- Apply all highlight groups
+  set_highlights(editor)
+  set_highlights(syntax)
+  set_highlights(diagnostics)
+  set_highlights(treesitter)
+  set_highlights(lsp_semantic)
+  set_highlights(lsp)
+  set_highlights(cmp)
+  set_highlights(blink)
+  set_highlights(telescope)
+  set_highlights(neo_tree)
+  set_highlights(nvim_tree)
+  set_highlights(gitsigns)
+  set_highlights(gitgutter)
+  set_highlights(which_key)
+  set_highlights(dashboard)
+  set_highlights(indent_blankline)
+  set_highlights(rainbow)
+  set_highlights(mini)
+  set_highlights(illuminate)
+  set_highlights(lazy)
+  set_highlights(mason)
+  set_highlights(noice)
+  set_highlights(notify)
+  set_highlights(flash)
+  set_highlights(trouble)
+  set_highlights(navic)
+  set_highlights(aerial)
+  set_highlights(bufferline)
+  set_highlights(snacks)
+  set_highlights(fidget)
+  set_highlights(neogit)
+  set_highlights(diffview)
+  set_highlights(lspsaga)
+  set_highlights(copilot)
+  set_highlights(dap)
+  set_highlights(neotest)
+  set_highlights(oil)
+  set_highlights(harpoon)
+  set_highlights(octo)
+
+  -- Apply user overrides
+  if cfg.highlights and type(cfg.highlights) == "table" then
+    set_highlights(cfg.highlights)
   end
 end
 
