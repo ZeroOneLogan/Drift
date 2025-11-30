@@ -283,66 +283,66 @@ M.moon = {
 
 -- ┌──────────────────────────────────────────────────────────────────────────┐
 -- │                            MOONLIGHT                                     │
--- │      Port of the iconic VS Code "Moonlight" theme by @atomiks            │
+-- │      Port of shaunsingh/moonlight.nvim (VS Code Moonlight)               │
 -- └──────────────────────────────────────────────────────────────────────────┘
 M.moonlight = {
-  -- Backgrounds - indigo night base
-  bg0 = "#1e2030",       -- Main editor background
-  bg1 = "#222436",       -- Sidebars, status bars
-  bg2 = "#2a2d3f",       -- Selection, subtle panels
-  bg3 = "#2f334d",       -- Popups, floating windows
-  bg4 = "#3b4261",       -- Highlighted / cursorline
-  bg_float = "#1f2233",  -- Floating windows background
-  bg_popup = "#1f2233",  -- Popup menus
-  bg_visual = "#31374f", -- Visual selection
-  bg_search = "#3f2d1c", -- Search highlight (amber glow)
-  bg_match = "#2a2f4e",  -- Match parentheses
+  -- Backgrounds - indigo night from shaunsingh palette
+  bg0 = "#212337",       -- Main editor background
+  bg1 = "#1b1e2b",       -- Sidebars, status bars (bg_alt)
+  bg2 = "#262a40",       -- Contrast background
+  bg3 = "#403c64",       -- Visual selection
+  bg4 = "#414863",       -- Active / cursorline
+  bg_float = "#1b1e2b",  -- Floating windows background
+  bg_popup = "#1b1e2b",  -- Popup menus
+  bg_visual = "#403c64", -- Visual selection
+  bg_search = "#352a1d", -- Search highlight
+  bg_match = "#2b3050",  -- Match parentheses
 
   -- Foregrounds - crisp moonlit text
-  fg0 = "#dfe6ff",       -- Brightest - titles, bold
-  fg1 = "#c8d3f5",       -- Main text
-  fg2 = "#a9b8d1",       -- Secondary text
-  fg3 = "#7a88cf",       -- Comments, line numbers
-  fg4 = "#5c6185",       -- Disabled, subtle text
+  fg0 = "#EEFFFF",       -- Brightest - titles, bold
+  fg1 = "#e4f3fa",       -- Main text
+  fg2 = "#a3ace1",       -- Secondary text
+  fg3 = "#7486d6",       -- Comments, line numbers
+  fg4 = "#596399",       -- Disabled, subtle text
 
-  -- Accent Colors - bubblegum on indigo
-  rose = "#f4a6d6",
-  coral = "#ff966c",
+  -- Accent Colors - faithful to shaunsingh/moonlight
+  rose = "#ecb2f0",
+  coral = "#f67f81",
   amber = "#ffc777",
   gold = "#ffd8a1",
-  sage = "#c3e88d",
-  mint = "#4fd6be",
-  cyan = "#86e1fc",
-  azure = "#82aaff",
-  iris = "#c099ff",
-  lavender = "#b4befe",
+  sage = "#2df4c0",
+  mint = "#80cbc4",
+  cyan = "#04d1f9",
+  azure = "#5cb4fc",
+  iris = "#b4a4f4",
+  lavender = "#b994f1",
   mauve = "#ff5370",
-  blossom = "#ffbde7",
+  blossom = "#d6e7f0",
 
   -- Semantic colors
   error = "#ff5370",
   warn = "#ffc777",
-  info = "#82aaff",
-  hint = "#4fd6be",
-  ok = "#c3e88d",
+  info = "#d6e7f0",
+  hint = "#b4a4f4",
+  ok = "#2df4c0",
 
   -- Diff colors
-  diff_add = "#1f2b2d",
-  diff_add_fg = "#c3e88d",
-  diff_delete = "#2f1f2a",
+  diff_add = "#1c2f2a",
+  diff_add_fg = "#2df4c0",
+  diff_delete = "#2f1f26",
   diff_delete_fg = "#ff5370",
-  diff_change = "#1f2a3a",
-  diff_change_fg = "#82aaff",
+  diff_change = "#1c2436",
+  diff_change_fg = "#5cb4fc",
   diff_text = "#2b3a55",
 
   -- Git colors
-  git_add = "#c3e88d",
+  git_add = "#2df4c0",
   git_change = "#ffc777",
   git_delete = "#ff5370",
 
   -- Border
-  border = "#3b4261",
-  border_highlight = "#82aaff",
+  border = "#414863",
+  border_highlight = "#a1abe0",
 
   -- Special
   none = "NONE",

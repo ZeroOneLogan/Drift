@@ -38,9 +38,9 @@ Inspired by the Northern Lights. Features distinctive purple and teal undertones
 A softer dark variant with muted tones. Ideal for those who find typical dark themes too harsh.
 
 ### Moonlight
-*Iconic indigo glow, VS Code faithful*
+*Shaunsingh's Moonlight (VS Code)*
 
-Direct port of the beloved VS Code Moonlight theme by @atomiks—deep indigo base, bubblegum highlights, and electric azure accents for a sleek yet playful feel.
+Faithful port of **shaunsingh/moonlight.nvim** (itself a VS Code Moonlight port by @atomiks): deep indigo canvas with bubblegum pinks, cyan-blue functions, and warm amber highlights.
 
 ### Day (Light)
 *Clean, bright, professional*
