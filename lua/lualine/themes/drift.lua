@@ -15,7 +15,6 @@ function M.get()
   c = colors.extend(c)
 
   -- Determine if using light or dark background
-  local is_light = vim.o.background == "light"
 
   -- Create accent variations for visual interest
   local bg_status = util.darken(c.bg0, 0.8)
