@@ -1,10 +1,32 @@
 -- Drift colorscheme highlight definitions
 local c = require("drift.colors")
-local cfg = vim.g.drift_config
 local util = require("drift.util")
 
 local M = {}
 local hl = { langs = {}, plugins = {} }
+
+-- Helper to get config safely
+local function get_config()
+  return vim.g.drift_config or {
+    transparent = false,
+    ending_tildes = false,
+    cmp_itemkind_reverse = false,
+    code_style = {
+      comments = "italic",
+      keywords = "none",
+      functions = "none",
+      strings = "none",
+      variables = "none",
+    },
+    diagnostics = {
+      darker = true,
+      undercurl = true,
+      background = true,
+    },
+  }
+end
+
+local cfg = get_config()
 
 local function vim_highlights(highlights)
   for group_name, group_settings in pairs(highlights) do
@@ -735,7 +757,10 @@ function M.setup()
     return prefix .. "=" .. color_name
   end
 
-  for group_name, group_settings in pairs(vim.g.drift_config.highlights) do
+  local current_config = vim.g.drift_config or {}
+  local highlights = current_config.highlights or {}
+
+  for group_name, group_settings in pairs(highlights) do
     vim.api.nvim_command(
       string.format(
         "highlight %s %s %s %s %s",

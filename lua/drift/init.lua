@@ -22,9 +22,10 @@ function M.colorscheme()
   end
   vim.o.termguicolors = true
   vim.g.colors_name = "drift"
+  local cfg = vim.g.drift_config or {}
   if vim.o.background == "light" then
     M.set_options("style", "light")
-  elseif vim.g.drift_config.style == "light" then
+  elseif cfg.style == "light" then
     M.set_options("style", "light")
   end
   require("drift.highlights").setup()
