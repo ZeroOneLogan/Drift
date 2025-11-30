@@ -112,25 +112,25 @@ function M.blend(color1, color2, factor)
   return M.rgb_to_hex(r, g, b)
 end
 
----Darken a color
+---Darken a color by blending it with a dark background
 ---@param hex string hex color
----@param amount number 0-1 (how much to darken)
----@param bg? string optional background to blend with
+---@param amount number 0-1 (0 = no change, 1 = fully dark)
+---@param bg? string optional background to blend with (default: "#000000")
 ---@return string
 function M.darken(hex, amount, bg)
   if not hex or hex == "NONE" then
     return hex or "NONE"
   end
   bg = bg or "#000000"
-  return M.blend(hex, bg, 1 - amount)
+  return M.blend(hex, bg, amount)
 end
 
----Lighten a color
+---Lighten a color by blending it with white
 ---@param hex string hex color
----@param amount number 0-1 (how much to lighten)
+---@param amount number 0-1 (0 = no change, 1 = fully white)
 ---@return string
 function M.lighten(hex, amount)
-  return M.darken(hex, amount, "#ffffff")
+  return M.blend(hex, "#ffffff", amount)
 end
 
 ---Saturate a color
@@ -314,7 +314,7 @@ function M.variations(base, bg)
   return {
     base = base,
     bright = M.lighten(base, 0.15),
-    dim = M.darken(base, 0.3, bg),
+    dim = M.darken(base, 0.7, bg),
     faint = M.darken(base, 0.5, bg),
     subtle = M.blend(bg, base, 0.15),
     muted = M.desaturate(base, 0.3),

@@ -43,7 +43,7 @@ function M.extend(c)
   local extended = vim.tbl_deep_extend("force", {}, c)
 
   -- Generate UI color variants
-  extended.bg_dark = util.darken(c.bg0, 0.9)
+  extended.bg_dark = util.darken(c.bg0, 0.1)
   extended.bg_highlight = util.lighten(c.bg0, 0.05)
   extended.bg_sidebar = c.bg1
   extended.bg_statusline = c.bg1
@@ -57,7 +57,7 @@ function M.extend(c)
   extended.ok_bg = util.blend(c.bg0, c.ok, 0.1)
 
   -- Generate text variants
-  extended.fg_dark = util.darken(c.fg1, 0.2, c.bg0)
+  extended.fg_dark = util.darken(c.fg1, 0.8, c.bg0)
   extended.fg_gutter = c.fg4
   extended.fg_sidebar = c.fg2
 

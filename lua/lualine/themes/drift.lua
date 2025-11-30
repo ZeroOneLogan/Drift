@@ -17,7 +17,7 @@ function M.get()
   -- Determine if using light or dark background
 
   -- Create accent variations for visual interest
-  local bg_status = util.darken(c.bg0, 0.8)
+  local bg_status = util.darken(c.bg0, 0.2)
   local bg_inactive = util.lighten(c.bg0, 0.03)
 
   return {
