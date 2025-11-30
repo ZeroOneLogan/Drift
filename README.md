@@ -1,12 +1,12 @@
 # 🌊 Drift
 
-> A **unique**, **beautiful**, and **meticulously crafted** Neovim colorscheme with **6 stunning variants** designed to elevate your coding experience.
+> A **unique**, **beautiful**, and **meticulously crafted** Neovim colorscheme with **7 stunning variants** designed to elevate your coding experience.
 
 Drift isn't just another colorscheme—it's a visual language that adapts to your mood and workflow. From the deep, contemplative tones of **Night** to the ethereal glow of **Nebula**, each variant is carefully designed with semantic coloring, optimal contrast ratios, and a cohesive aesthetic that makes code not just readable, but *beautiful*.
 
 ## ✨ Features
 
-- **6 Unique Variants**: Night, Storm, Aurora, Moon, Day (light), and Nebula
+- **7 Unique Variants**: Night, Storm, Aurora, Moon, Moonlight, Day (light), and Nebula
 - **Semantic Highlighting**: Colors that *mean* something—errors are red, warnings amber, success green
 - **Full Treesitter Support**: 100+ modern `@` captures for accurate syntax highlighting
 - **LSP Semantic Tokens**: Complete integration with LSP for intelligent highlighting
@@ -36,6 +36,11 @@ Inspired by the Northern Lights. Features distinctive purple and teal undertones
 *Soft, gentle, refined*
 
 A softer dark variant with muted tones. Ideal for those who find typical dark themes too harsh.
+
+### Moonlight
+*Iconic indigo glow, VS Code faithful*
+
+Direct port of the beloved VS Code Moonlight theme by @atomiks—deep indigo base, bubblegum highlights, and electric azure accents for a sleek yet playful feel.
 
 ### Day (Light)
 *Clean, bright, professional*
@@ -95,7 +100,7 @@ Drift works out of the box with sensible defaults, but every aspect can be custo
 
 ```lua
 require("drift").setup({
-  -- Choose your variant: "night", "storm", "aurora", "moon", "day", "nebula"
+  -- Choose your variant: "night", "storm", "aurora", "moon", "moonlight", "day", "nebula"
   style = "night",
 
   -- Transparent background

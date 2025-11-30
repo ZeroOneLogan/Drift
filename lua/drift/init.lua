@@ -1,16 +1,16 @@
 -- =============================================================================
 -- DRIFT COLORSCHEME
--- A unique, beautiful Neovim colorscheme with 6 stunning variants
+-- A unique, beautiful Neovim colorscheme with 7 stunning variants
 -- =============================================================================
 
 local M = {}
 
 -- Available style variants
-M.styles_list = { "night", "storm", "aurora", "moon", "day", "nebula" }
+M.styles_list = { "night", "storm", "aurora", "moon", "moonlight", "day", "nebula" }
 
 -- Default configuration
 local default_config = {
-  -- The base style: "night", "storm", "aurora", "moon", "day", "nebula"
+  -- The base style: "night", "storm", "aurora", "moon", "moonlight", "day", "nebula"
   style = "night",
 
   -- Show "~" at end of buffer (default: false)

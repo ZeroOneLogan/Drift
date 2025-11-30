@@ -282,6 +282,73 @@ M.moon = {
 }
 
 -- ┌──────────────────────────────────────────────────────────────────────────┐
+-- │                            MOONLIGHT                                     │
+-- │      Port of the iconic VS Code "Moonlight" theme by @atomiks            │
+-- └──────────────────────────────────────────────────────────────────────────┘
+M.moonlight = {
+  -- Backgrounds - indigo night base
+  bg0 = "#1e2030",       -- Main editor background
+  bg1 = "#222436",       -- Sidebars, status bars
+  bg2 = "#2a2d3f",       -- Selection, subtle panels
+  bg3 = "#2f334d",       -- Popups, floating windows
+  bg4 = "#3b4261",       -- Highlighted / cursorline
+  bg_float = "#1f2233",  -- Floating windows background
+  bg_popup = "#1f2233",  -- Popup menus
+  bg_visual = "#31374f", -- Visual selection
+  bg_search = "#3f2d1c", -- Search highlight (amber glow)
+  bg_match = "#2a2f4e",  -- Match parentheses
+
+  -- Foregrounds - crisp moonlit text
+  fg0 = "#dfe6ff",       -- Brightest - titles, bold
+  fg1 = "#c8d3f5",       -- Main text
+  fg2 = "#a9b8d1",       -- Secondary text
+  fg3 = "#7a88cf",       -- Comments, line numbers
+  fg4 = "#5c6185",       -- Disabled, subtle text
+
+  -- Accent Colors - bubblegum on indigo
+  rose = "#f4a6d6",
+  coral = "#ff966c",
+  amber = "#ffc777",
+  gold = "#ffd8a1",
+  sage = "#c3e88d",
+  mint = "#4fd6be",
+  cyan = "#86e1fc",
+  azure = "#82aaff",
+  iris = "#c099ff",
+  lavender = "#b4befe",
+  mauve = "#ff5370",
+  blossom = "#ffbde7",
+
+  -- Semantic colors
+  error = "#ff5370",
+  warn = "#ffc777",
+  info = "#82aaff",
+  hint = "#4fd6be",
+  ok = "#c3e88d",
+
+  -- Diff colors
+  diff_add = "#1f2b2d",
+  diff_add_fg = "#c3e88d",
+  diff_delete = "#2f1f2a",
+  diff_delete_fg = "#ff5370",
+  diff_change = "#1f2a3a",
+  diff_change_fg = "#82aaff",
+  diff_text = "#2b3a55",
+
+  -- Git colors
+  git_add = "#c3e88d",
+  git_change = "#ffc777",
+  git_delete = "#ff5370",
+
+  -- Border
+  border = "#3b4261",
+  border_highlight = "#82aaff",
+
+  -- Special
+  none = "NONE",
+}
+
+-- ┌──────────────────────────────────────────────────────────────────────────┐
 -- │                               DAY                                        │
 -- │              Light theme - morning ocean with sun sparkles               │
 -- └──────────────────────────────────────────────────────────────────────────┘
